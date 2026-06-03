@@ -1,23 +1,49 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    const response = await fetch("/api/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    setError(null);
+    setSuccess(null);
 
-    const result = await response.json();
+    if (!email) {
+      setError("Please enter your email address.");
+      return;
+    }
 
-    if (result.success) {
-      alert("Login successful!");
-    } else {
-      alert("Login failed!");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess("Login successful!");
+      } else {
+        setError(result.message || "Login failed!");
+      }
+    } catch (err) {
+      setError("An error occurred during login.");
     }
   };
 
@@ -29,19 +55,40 @@ export default function LoginPage() {
         
         {/* LOGO */}
         <div className="pt-8 pl-12">
-          <img src="/img/Logo.png" className="h-10" />
+          <Link href="/">
+            <img src="/img/Logo.png" className="h-10 hover:opacity-80 transition cursor-pointer" alt="Logo" />
+          </Link>
         </div>
 
         {/* FORM */}
-        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto px-6">
+        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto px-6 w-full">
           
-          <h1 className="text-[2.5rem] font-bold text-black mb-2">
+          <h1 className="text-[2.5rem] font-bold text-black mb-2 leading-tight">
             Hello!
           </h1>
 
-          <h1 className="text-[2.5rem] font-bold text-black mb-10">
+          <h1 className="text-[2.5rem] font-bold text-black mb-6 leading-tight">
             Welcome Back!
           </h1>
+
+          {/* NOTIFICATION MESSAGES */}
+          {error && (
+            <div className="mb-6 text-[14px] font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300">
+              <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 text-[14px] font-semibold text-green-600 bg-green-50 border border-green-200 rounded-xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300">
+              <svg className="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{success}</span>
+            </div>
+          )}
 
           {/* EMAIL */}
           <label className="text-[13px] font-bold text-black mb-2">
@@ -49,8 +96,12 @@ export default function LoginPage() {
           </label>
           <input
             type="email"
+            value={email}
             className="w-full h-12 rounded-xl border border-[#c1cfee] px-4 mb-5 focus:outline-none focus:border-blue-500"
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) setError(null);
+            }}
           />
 
           {/* PASSWORD */}
@@ -59,8 +110,12 @@ export default function LoginPage() {
           </label>
           <input
             type="password"
+            value={password}
             className="w-full h-12 rounded-xl border border-[#c1cfee] px-4 mb-6 focus:outline-none focus:border-blue-500"
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError(null);
+            }}
           />
 
           {/* OTHER ACCOUNT */}
@@ -78,9 +133,9 @@ export default function LoginPage() {
 
           <div className="mt-10 text-[14px] font-bold text-black">
             Don't have an account?{" "}
-            <span className="text-blue-600 cursor-pointer">
+            <Link href="/signup" className="text-blue-600 hover:underline transition-colors">
               Sign Up
-            </span>
+            </Link>
           </div>
         </div>
       </div>
@@ -90,6 +145,7 @@ export default function LoginPage() {
         <img
           src="/img/LoginPicture.png"
           className="w-full h-full object-cover"
+          alt="Login Graphic"
         />
       </div>
     </div>
