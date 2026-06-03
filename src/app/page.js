@@ -1,5 +1,160 @@
+"use client";
+
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+
+function FadeInSection({ children }) {
+  const [isVisible, setVisible] = useState(false);
+  const domRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            if (domRef.current) {
+              observer.unobserve(domRef.current);
+            }
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = domRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
+  return (
+    <div
+      ref={domRef}
+      className={`transition-all duration-[1000ms] ease-out transform ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function AnimatedNumber({ value }) {
+  const [current, setCurrent] = useState(0);
+  const domRef = useRef(null);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setHasStarted(true);
+            if (domRef.current) {
+              observer.unobserve(domRef.current);
+            }
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = domRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    let startTime = null;
+    const duration = 2000; // 2 seconds
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      
+      // Easing out quartic (very slow deceleration near the end)
+      const easeProgress = 1 - Math.pow(1 - progress, 4);
+      setCurrent(Math.floor(easeProgress * value));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [hasStarted, value]);
+
+  return <span ref={domRef}>{current}</span>;
+}
+
+const row1Testimonials = [
+  {
+    name: "Frederick Octovian",
+    university: "Universitas Tadulako",
+    image: "/frederick.png",
+    quote: "Very nice looking application!. As an UI/UX Designer i really like the flow of the whole website and how it's made easy for students"
+  },
+  {
+    name: "Muhammad Gavin Satrio",
+    university: "Kyoto University",
+    image: "/gavin.png",
+    quote: "This app is very useful for many things! especially finding myself an institution!"
+  },
+  {
+    name: "Putu Argya Deriandra",
+    university: "Udayana University",
+    image: "/putu.jpg",
+    quote: "Finding study abroad opportunities has never been this straightforward. The interface is intuitive, and the recommendations are spot on!"
+  },
+  {
+    name: "Ignatius Raquel Aditama Sundjaya",
+    university: "Bina Nusantara University",
+    image: "/ignatius.jpg",
+    quote: "The platform helped me compare different universities and course modules easily. Highly recommended for any student planning their future!"
+  }
+];
+
+const row2Testimonials = [
+  {
+    name: "Htet Wai Yan",
+    university: "Yangon University",
+    image: "/htet.png",
+    quote: "I love this application like i love Indonesia! i'm so amazed by the AI feature available in this application"
+  },
+  {
+    name: "Rafi Athallah",
+    university: "Universitas Tanjungpura",
+    image: "/rafi.jpg",
+    quote: "This application is very useful for finding my international college, the steps are very clear and easy to follow!"
+  },
+  {
+    name: "Farrell Jeremiah Nusah",
+    university: "Tsinghua University",
+    image: "/farrell.jpg",
+    quote: "Choosing the right university in China was a breeze with this app. The database is incredibly comprehensive and accurate!"
+  },
+  {
+    name: "Muhammad Rayhan Zaky",
+    university: "State University of Surabaya",
+    image: "/rayhan.jpg",
+    quote: "An absolute game changer for academic planning. The community and resources here helped me make the right decision for my degree."
+  }
+];
 
 export default function Home() {
   return (
@@ -41,33 +196,36 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative w-full h-[650px] bg-gray-900 overflow-hidden">
+      <section className="relative w-full h-[calc(100vh-80px)] bg-gray-900 overflow-hidden">
         <Image
           src="/hero_bg.png"
           alt="University Campus"
           fill
-          className="object-cover object-bottom"
+          className="object-fill"
           priority
           quality={100}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
 
         <div className="absolute bottom-20 left-8 md:left-[10%] z-10 w-full">
-          <h1 className="text-[5rem] md:text-[6rem] leading-[1.05] font-extrabold tracking-tight text-white drop-shadow-md font-sans">
-            SETTLE YOUR <br />
-            EDUCATION
-          </h1>
+          <FadeInSection>
+            <h1 className="text-[5rem] md:text-[6rem] leading-[1.05] font-extrabold tracking-tight text-white drop-shadow-md font-sans">
+              SETTLE YOUR <br />
+              EDUCATION
+            </h1>
+          </FadeInSection>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-24 px-8 md:px-[10%] mx-auto w-full">
+      <FadeInSection>
+        <section className="py-24 px-8 md:px-[10%] mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-20 gap-x-12">
 
           {/* Stat 1 */}
           <div className="flex items-center gap-6">
             <div className="text-[5.5rem] font-light text-black tracking-tight leading-none">
-              200+
+              <AnimatedNumber value={200} />+
             </div>
             <div className="flex flex-col text-[1.1rem] text-gray-800 leading-[1.3] font-medium">
               <span>Partner Universities</span>
@@ -78,7 +236,7 @@ export default function Home() {
           {/* Stat 2 */}
           <div className="flex items-center gap-6">
             <div className="text-[5.5rem] font-light text-black tracking-tight leading-none">
-              1000+
+              <AnimatedNumber value={1000} />+
             </div>
             <div className="flex flex-col text-[1.1rem] text-gray-800 leading-[1.3] font-medium">
               <span>International</span>
@@ -89,7 +247,7 @@ export default function Home() {
           {/* Stat 3 */}
           <div className="flex items-center gap-6">
             <div className="text-[5.5rem] font-light text-black tracking-tight leading-none">
-              30+
+              <AnimatedNumber value={30} />+
             </div>
             <div className="flex flex-col text-[1.1rem] text-gray-800 leading-[1.3] font-medium">
               <span>Countries</span>
@@ -100,7 +258,7 @@ export default function Home() {
           {/* Stat 4 */}
           <div className="flex items-center gap-6">
             <div className="text-[5.5rem] font-light text-black tracking-tight leading-none">
-              50+
+              <AnimatedNumber value={50} />+
             </div>
             <div className="flex flex-col text-[1.1rem] text-gray-800 leading-[1.3] font-medium">
               <span>Professional</span>
@@ -110,6 +268,261 @@ export default function Home() {
 
         </div>
       </section>
+      </FadeInSection>
+
+      {/* Partner Universities Section */}
+      <FadeInSection>
+        <section className="bg-[#EBF3FC] py-20 px-8 md:px-[10%] w-full">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-[2.5rem] text-center text-black mb-14 font-semibold tracking-tight font-sans">
+            Our Partner Universities
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-12 gap-y-12 items-center justify-items-center">
+            {/* Row 1 */}
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/yale.png" alt="Yale University" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/harvard.png" alt="Harvard University" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/tokyo.png" alt="The University of Tokyo" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/princeton.png" alt="Princeton University" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+
+            {/* Row 2 */}
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/nara.png" alt="Nara Women's University" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/ucla.png" alt="UCLA" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/kyoto.png" alt="Kyoto University" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center h-20 w-full p-2">
+              <img src="/malaya.png" alt="University of Malaya" className="max-h-12 md:max-h-14 max-w-full object-contain" />
+            </div>
+          </div>
+        </div>
+      </section>
+      </FadeInSection>
+
+      {/* Testimonials Section */}
+      <FadeInSection>
+        <section className="py-24 bg-white overflow-hidden w-full border-t border-gray-50">
+        <div className="max-w-7xl mx-auto px-8 mb-16 text-center">
+          <h2 className="text-3xl md:text-[2.5rem] font-bold text-gray-900 tracking-tight font-sans">
+            Loved by Students Worldwide
+          </h2>
+          <p className="text-gray-500 mt-4 text-lg font-medium">
+            Hear from students who found their dream university through Interlect
+          </p>
+        </div>
+
+        {/* Sliding Rows */}
+        <div className="flex flex-col gap-8 w-full">
+          {/* Row 1 (Slides Left) */}
+          <div className="relative w-full overflow-hidden py-4">
+            {/* Gradient masks for smooth fading edges */}
+            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
+            
+            <div className="animate-marquee-left flex gap-6 hover:[animation-play-state:paused]">
+              {/* Render original list */}
+              {row1Testimonials.map((t, idx) => (
+                <div key={`row1-${idx}`} className="flex items-start bg-white border border-gray-100 rounded-2xl shadow-lg shadow-gray-100/40 p-6 w-[480px] shrink-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-gray-200/50">
+                  <img src={t.image} alt={t.name} className="w-16 h-16 rounded-full object-cover shrink-0 border border-gray-100" />
+                  <div className="ml-5 flex flex-col justify-start">
+                    <div className="text-[15px] font-bold text-gray-900 leading-tight">
+                      {t.name} <span className="text-gray-400 font-normal"> - </span> <span className="text-blue-600 font-semibold">{t.university}</span>
+                    </div>
+                    <p className="text-[13px] text-gray-600 mt-2.5 leading-relaxed font-normal">
+                      "{t.quote}"
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {/* Duplicate list for seamless loop */}
+              {row1Testimonials.map((t, idx) => (
+                <div key={`row1-dup-${idx}`} className="flex items-start bg-white border border-gray-100 rounded-2xl shadow-lg shadow-gray-100/40 p-6 w-[480px] shrink-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-gray-200/50">
+                  <img src={t.image} alt={t.name} className="w-16 h-16 rounded-full object-cover shrink-0 border border-gray-100" />
+                  <div className="ml-5 flex flex-col justify-start">
+                    <div className="text-[15px] font-bold text-gray-900 leading-tight">
+                      {t.name} <span className="text-gray-400 font-normal"> - </span> <span className="text-blue-600 font-semibold">{t.university}</span>
+                    </div>
+                    <p className="text-[13px] text-gray-600 mt-2.5 leading-relaxed font-normal">
+                      "{t.quote}"
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 (Slides Right) */}
+          <div className="relative w-full overflow-hidden py-4">
+            {/* Gradient masks for smooth fading edges */}
+            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
+
+            <div className="animate-marquee-right flex gap-6 hover:[animation-play-state:paused]">
+              {/* Render original list */}
+              {row2Testimonials.map((t, idx) => (
+                <div key={`row2-${idx}`} className="flex items-start bg-white border border-gray-100 rounded-2xl shadow-lg shadow-gray-100/40 p-6 w-[480px] shrink-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-gray-200/50">
+                  <img src={t.image} alt={t.name} className="w-16 h-16 rounded-full object-cover shrink-0 border border-gray-100" />
+                  <div className="ml-5 flex flex-col justify-start">
+                    <div className="text-[15px] font-bold text-gray-900 leading-tight">
+                      {t.name} <span className="text-gray-400 font-normal"> - </span> <span className="text-blue-600 font-semibold">{t.university}</span>
+                    </div>
+                    <p className="text-[13px] text-gray-600 mt-2.5 leading-relaxed font-normal">
+                      "{t.quote}"
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {/* Duplicate list for seamless loop */}
+              {row2Testimonials.map((t, idx) => (
+                <div key={`row2-dup-${idx}`} className="flex items-start bg-white border border-gray-100 rounded-2xl shadow-lg shadow-gray-100/40 p-6 w-[480px] shrink-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-gray-200/50">
+                  <img src={t.image} alt={t.name} className="w-16 h-16 rounded-full object-cover shrink-0 border border-gray-100" />
+                  <div className="ml-5 flex flex-col justify-start">
+                    <div className="text-[15px] font-bold text-gray-900 leading-tight">
+                      {t.name} <span className="text-gray-400 font-normal"> - </span> <span className="text-blue-600 font-semibold">{t.university}</span>
+                    </div>
+                    <p className="text-[13px] text-gray-600 mt-2.5 leading-relaxed font-normal">
+                      "{t.quote}"
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      </FadeInSection>
+
+      {/* Get Started Section */}
+      <FadeInSection>
+        <section className="bg-[#EBF3FC] py-24 px-8 md:px-[10%] w-full">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-[2.75rem] font-semibold text-gray-900 tracking-tight mb-16 text-center font-sans">
+            Get Started with Interlect!
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Consult Card */}
+            <div className="bg-white rounded-3xl shadow-lg shadow-blue-900/5 border border-gray-100 overflow-hidden flex flex-col justify-between">
+              <div>
+                <img 
+                  src="/consult_with_professionals.png" 
+                  alt="Consult with Professionals" 
+                  className="w-full h-64 object-cover" 
+                />
+                <div className="p-8 pb-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Consult with Professionals
+                  </h3>
+                  <p className="text-gray-500 text-[15px] leading-relaxed">
+                    Consult with one of many of the best education consultants all around the world!.
+                  </p>
+                </div>
+              </div>
+              <div className="px-8 pb-8 pt-2">
+                <Link 
+                  href="/login" 
+                  className="w-full bg-[#0066FF] text-white py-4 rounded-2xl font-bold text-[15px] hover:bg-blue-700 transition-colors text-center inline-block shadow-md hover:shadow-lg"
+                >
+                  Consult Now
+                </Link>
+              </div>
+            </div>
+
+            {/* Search Card */}
+            <div className="bg-white rounded-3xl shadow-lg shadow-blue-900/5 border border-gray-100 overflow-hidden flex flex-col justify-between">
+              <div>
+                <img 
+                  src="/search_universities.png" 
+                  alt="Search Universities" 
+                  className="w-full h-64 object-cover" 
+                />
+                <div className="p-8 pb-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Search Universities
+                  </h3>
+                  <p className="text-gray-500 text-[15px] leading-relaxed">
+                    Find out about all universities around the world!. Also included with scholarships for each universities!
+                  </p>
+                </div>
+              </div>
+              <div className="px-8 pb-8 pt-2">
+                <Link 
+                  href="/login" 
+                  className="w-full bg-[#0066FF] text-white py-4 rounded-2xl font-bold text-[15px] hover:bg-blue-700 transition-colors text-center inline-block shadow-md hover:shadow-lg"
+                >
+                  Search for Universities
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      </FadeInSection>
+
+      {/* Footer Section */}
+      <FadeInSection>
+        <div className="border-t border-gray-200 w-full" />
+        <footer className="bg-white py-16 px-8 md:px-[10%] w-full">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {/* Left Col (Interlect. brand) */}
+            <div className="md:col-span-2 flex flex-col gap-4">
+              <h2 className="text-3xl font-semibold text-gray-900 tracking-tight font-sans">Interlect.</h2>
+              <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
+                The service does not provide commercial services. All services provided by the service are purely informational in nature.
+              </p>
+            </div>
+            
+            {/* Contacts Column */}
+            <div className="flex flex-col gap-4">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider font-sans">Contacts</h3>
+              <ul className="flex flex-col gap-3 text-[15px] font-medium text-gray-800">
+                <li><a href="mailto:interlect@gmail.com" className="hover:text-blue-600 transition-colors">interlect@gmail.com</a></li>
+                <li className="text-gray-900 font-normal">14140 Cilincing, Jakarta Utara</li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Bottom Bar */}
+          <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-100 pt-8 mt-16 text-sm text-gray-400">
+            <div>© 2026 — Copyright</div>
+            <div className="flex items-center gap-6 mt-4 sm:mt-0">
+              <a href="#" aria-label="Facebook">
+                <svg className="w-5 h-5 text-gray-900 hover:text-blue-600 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+                </svg>
+              </a>
+              <a href="#" aria-label="Instagram">
+                <svg className="w-5 h-5 text-gray-900 hover:text-pink-600 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+                </svg>
+              </a>
+              <a href="#" aria-label="VK">
+                <svg className="w-5 h-5 text-gray-900 hover:text-blue-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.13 2H4.87C3.29 2 2 3.29 2 4.87v14.26C2 20.71 3.29 22 4.87 22h14.26c1.58 0 2.87-1.29 2.87-2.87V4.87C22 3.29 20.71 2 19.13 2zm-3.69 13.96h-1.04c-.38 0-.69-.17-.92-.51-.62-.91-1.24-1.82-1.85-2.73-.13-.2-.31-.29-.53-.26v3.5h-1.12V8.41h1.12v3.08c.2-.02.35-.11.47-.28.53-.78 1.05-1.57 1.57-2.36.19-.29.47-.44.83-.44h1.04c.1 0 .17.06.13.15-.36.78-.71 1.57-1.07 2.35-.11.23-.11.43.02.66.52.88 1.04 1.77 1.57 2.65.08.13.01.25-.13.25z"/>
+                </svg>
+              </a>
+              <a href="#" aria-label="Telegram">
+                <svg className="w-5 h-5 text-gray-900 hover:text-blue-400 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.35-.49.97-.74 3.79-1.65 6.32-2.74 7.57-3.27 3.61-1.53 4.36-1.8 4.85-1.8.11 0 .35.03.5.15.13.1.17.23.18.33.02.08.02.24 0 .33z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+      </FadeInSection>
     </div>
   );
 }
