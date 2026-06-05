@@ -229,6 +229,26 @@ const universities = [
 // Main Component
 // ----------------------------------------------------
 export default function SearchPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      setIsLoggedIn(loggedIn);
+      if (loggedIn) {
+        setUserEmail(localStorage.getItem('userEmail') || "");
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+    setIsLoggedIn(false);
+    setUserEmail("");
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [filteredUnis, setFilteredUnis] = useState(universities);
@@ -303,12 +323,28 @@ export default function SearchPage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/login" className="px-6 py-2.5 text-sm font-bold text-blue-600 rounded-full border-[1.5px] border-blue-600 hover:bg-blue-50 transition-colors">
-              Login
-            </Link>
-            <Link href="/signup" className="px-6 py-2.5 text-sm font-bold text-white bg-[#0066FF] rounded-full hover:bg-blue-700 transition-colors shadow-md inline-block text-center">
-              Sign Up
-            </Link>
+            {isLoggedIn ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-semibold text-gray-700 hidden sm:inline">
+                  {userEmail}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-6 py-2.5 text-sm font-bold text-red-600 rounded-full border-[1.5px] border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                >
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="px-6 py-2.5 text-sm font-bold text-blue-600 rounded-full border-[1.5px] border-blue-600 hover:bg-blue-50 transition-colors">
+                  Login
+                </Link>
+                <Link href="/signup" className="px-6 py-2.5 text-sm font-bold text-white bg-[#0066FF] rounded-full hover:bg-blue-700 transition-colors shadow-md inline-block text-center">
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
