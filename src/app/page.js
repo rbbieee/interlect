@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 
 function FadeInSection({ children }) {
@@ -157,8 +158,11 @@ const row2Testimonials = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -169,6 +173,17 @@ export default function Home() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (showLoginModal) {
+      if (countdown > 0) {
+        const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [showLoginModal, countdown, router]);
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
@@ -199,6 +214,10 @@ export default function Home() {
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     if (!chatInputText.trim()) return;
 
     const userText = chatInputText;
@@ -720,7 +739,13 @@ export default function Home() {
 
         {/* Toggle FAB Button */}
         <button
-          onClick={() => setShowChat(!showChat)}
+          onClick={() => {
+            if (!isLoggedIn) {
+              setShowLoginModal(true);
+            } else {
+              setShowChat(!showChat);
+            }
+          }}
           className="w-16 h-16 bg-[#0066FF] hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-[0px_10px_30px_rgba(0,102,255,0.3)] transition-all cursor-pointer hover:scale-105 active:scale-95 border border-blue-400/20"
           title={showChat ? "Close Chat" : "Chat with AI Assistant"}
         >
@@ -735,6 +760,35 @@ export default function Home() {
           )}
         </button>
       </div>
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border-2 border-gray-100 rounded-[32px] shadow-[0px_20px_50px_rgba(0,0,0,0.15)] max-w-md w-full p-8 relative flex flex-col items-center text-center animate-slide-up">
+            <div className="w-16 h-16 bg-blue-50 text-[#0066FF] rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">
+              Login Required
+            </h3>
+            
+            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+              You must log in to use the AI Assistant. Redirecting you to the login page in{" "}
+              <span className="font-extrabold text-[#0066FF] text-base">{countdown}</span> seconds...
+            </p>
+            
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full bg-[#0066FF] text-white py-3.5 rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-md active:scale-95 duration-150 cursor-pointer"
+            >
+              Go to Login Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

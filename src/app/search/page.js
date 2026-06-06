@@ -35,40 +35,40 @@ function CompareIcon({ className = "w-5 h-5" }) {
 // ----------------------------------------------------
 const flagRows = [
   [
-    { name: "Malaysia", emoji: "🇲🇾", rotate: "rotate-[-26.92deg]", size: "w-[43px] h-[45px] md:w-[48px] md:h-[50px]", src: "http://localhost:3845/assets/99d2c66efdf1b7c9141c7bd6afedde399bb21b5a.png" },
-    { name: "Philippines", emoji: "🇵🇭", rotate: "rotate-[14.59deg]", size: "w-[46px] h-[51px] md:w-[50px] md:h-[55px]", src: "http://localhost:3845/assets/a110f4e7645018550acdbfdaaa97829e1b48dc98.png" },
-    { name: "Monaco", emoji: "🇲🇨", rotate: "rotate-[-13.92deg]", size: "w-[47px] h-[47px] md:w-[52px] md:h-[52px]", src: "http://localhost:3845/assets/eccb995b154d7eb0fe5eae97871aa6bd741fb80d.png" },
-    { name: "New Zealand", emoji: "🇳🇿", rotate: "rotate-[8.75deg]", size: "w-[52px] h-[52px] md:w-[56px] md:h-[56px]", src: "http://localhost:3845/assets/7b76fbaae9e8af048f349a4b9d540dd748de42ec.png" },
-    { name: "Mali", emoji: "🇲🇱", rotate: "rotate-[-8.82deg]", size: "w-[51px] h-[51px]", src: "http://localhost:3845/assets/7842ec6702e48bf4004620b1f56bc8599183fa75.png" },
-    { name: "Morocco", emoji: "🇲🇦", rotate: "rotate-[6.7deg]", size: "w-[50px] h-[50px]", src: "http://localhost:3845/assets/1aabe760aa9b0389c07f4dfc6488b38e26bad3cf.png" },
-    { name: "Czechia", emoji: "🇨🇿", rotate: "rotate-[-17.02deg]", size: "w-[43px] h-[43px]", src: "http://localhost:3845/assets/d24115b9fe2eed6e3c18aa4158b22e9ae41f0d63.png" },
-    { name: "Bahrain", emoji: "🇧🇭", rotate: "rotate-[4.19deg]", size: "w-[44px] h-[44px]", src: "http://localhost:3845/assets/1c8d8c697eff5cf36d50bdc8a2916ce06fc5d1c1.png" },
-    { name: "Germany", emoji: "🇩🇪", rotate: "rotate-[16.59deg]", size: "w-[44px] h-[51px]", src: "http://localhost:3845/assets/0eff1df28ce03fcdbf76e2e5d9635fe634cd36b9.png" },
-    { name: "Brazil", emoji: "🇧🇷", rotate: "rotate-[-11.13deg]", size: "w-[47px] h-[47px]", src: "http://localhost:3845/assets/8c11581793e584f8c19a4b7738aa5b56af7a9473.png" }
+    { name: "Malaysia", emoji: "🇲🇾", rotate: "rotate-[-26.92deg]", size: "w-[43px] h-[45px] md:w-[48px] md:h-[50px]", src: "https://flagcdn.com/w80/my.png" },
+    { name: "Philippines", emoji: "🇵🇭", rotate: "rotate-[14.59deg]", size: "w-[46px] h-[51px] md:w-[50px] md:h-[55px]", src: "https://flagcdn.com/w80/ph.png" },
+    { name: "Monaco", emoji: "🇲🇨", rotate: "rotate-[-13.92deg]", size: "w-[47px] h-[47px] md:w-[52px] md:h-[52px]", src: "https://flagcdn.com/w80/mc.png" },
+    { name: "New Zealand", emoji: "🇳🇿", rotate: "rotate-[8.75deg]", size: "w-[52px] h-[52px] md:w-[56px] md:h-[56px]", src: "https://flagcdn.com/w80/nz.png" },
+    { name: "Mali", emoji: "🇲🇱", rotate: "rotate-[-8.82deg]", size: "w-[51px] h-[51px]", src: "https://flagcdn.com/w80/ml.png" },
+    { name: "Morocco", emoji: "🇲🇦", rotate: "rotate-[6.7deg]", size: "w-[50px] h-[50px]", src: "https://flagcdn.com/w80/ma.png" },
+    { name: "Czechia", emoji: "🇨🇿", rotate: "rotate-[-17.02deg]", size: "w-[43px] h-[43px]", src: "https://flagcdn.com/w80/cz.png" },
+    { name: "Bahrain", emoji: "🇧🇭", rotate: "rotate-[4.19deg]", size: "w-[44px] h-[44px]", src: "https://flagcdn.com/w80/bh.png" },
+    { name: "Germany", emoji: "🇩🇪", rotate: "rotate-[16.59deg]", size: "w-[44px] h-[51px]", src: "https://flagcdn.com/w80/de.png" },
+    { name: "Brazil", emoji: "🇧🇷", rotate: "rotate-[-11.13deg]", size: "w-[47px] h-[47px]", src: "https://flagcdn.com/w80/br.png" }
   ],
   [
-    { name: "England", emoji: "🇬🇧", rotate: "rotate-[16.32deg]", size: "w-[47px] h-[47px]", src: "http://localhost:3845/assets/3ad3c1b1e00cc38cbe4161a92a720187e3dd8fe8.png" },
-    { name: "Clipperton Island", emoji: "🇨🇵", rotate: "rotate-[-20.25deg]", size: "w-[48px] h-[48px]", src: "http://localhost:3845/assets/42db5b84c47c9c7d7bd27f2bd7017ce3584a4da1.png" },
-    { name: "Portugal", emoji: "🇵🇹", rotate: "rotate-[13.38deg]", size: "w-[49px] h-[49px]", src: "http://localhost:3845/assets/6a519069482cd1468d80fb3e62afd79c7f3db09a.png" },
-    { name: "Venezuela", emoji: "🇻🇪", rotate: "rotate-[18.86deg]", size: "w-[49px] h-[49px]", src: "http://localhost:3845/assets/6174c020cdf2d0c3be00a1913e6851a6f782871e.png" },
-    { name: "Poland", emoji: "🇵🇱", rotate: "rotate-[-17.03deg]", size: "w-[48px] h-[48px]", src: "http://localhost:3845/assets/305df6b8f17530ac0f560143d575d44b4d8479d9.png" },
-    { name: "Russia", emoji: "🇷🇺", rotate: "rotate-[14.16deg]", size: "w-[48px] h-[48px]", src: "http://localhost:3845/assets/e8f8b971747c3f4329e77388c3c66d9496e62935.png" },
-    { name: "Singapore", emoji: "🇸🇬", rotate: "rotate-[-8.74deg]", size: "w-[48px] h-[48px]", src: "http://localhost:3845/assets/ade45f234dfb907bdf890768d0778cf240272a7f.png" },
-    { name: "Timor-Leste", emoji: "🇹🇱", rotate: "rotate-[17.53deg]", size: "w-[49px] h-[49px]", src: "http://localhost:3845/assets/571c6a84cddf59021316a3ad5150c001898861d8.png" },
-    { name: "Serbia", emoji: "🇷🇸", rotate: "rotate-[-10.85deg]", size: "w-[48px] h-[48px]", src: "http://localhost:3845/assets/100c128e1c5c9dbaf3a6d65616e2d80bfa0e6787.png" },
-    { name: "India", emoji: "🇮🇳", rotate: "rotate-[25.19deg]", size: "w-[48px] h-[48px]", src: "http://localhost:3845/assets/abc58de1a7a763955dadda6ad7a3a38a2fa5fb3d.png" }
+    { name: "England", emoji: "🇬🇧", rotate: "rotate-[16.32deg]", size: "w-[47px] h-[47px]", src: "https://flagcdn.com/w80/gb.png" },
+    { name: "Clipperton Island", emoji: "🇨🇵", rotate: "rotate-[-20.25deg]", size: "w-[48px] h-[48px]", src: "https://flagcdn.com/w80/fr.png" },
+    { name: "Portugal", emoji: "🇵🇹", rotate: "rotate-[13.38deg]", size: "w-[49px] h-[49px]", src: "https://flagcdn.com/w80/pt.png" },
+    { name: "Venezuela", emoji: "🇻🇪", rotate: "rotate-[18.86deg]", size: "w-[49px] h-[49px]", src: "https://flagcdn.com/w80/ve.png" },
+    { name: "Poland", emoji: "🇵🇱", rotate: "rotate-[-17.03deg]", size: "w-[48px] h-[48px]", src: "https://flagcdn.com/w80/pl.png" },
+    { name: "Russia", emoji: "🇷🇺", rotate: "rotate-[14.16deg]", size: "w-[48px] h-[48px]", src: "https://flagcdn.com/w80/ru.png" },
+    { name: "Singapore", emoji: "🇸🇬", rotate: "rotate-[-8.74deg]", size: "w-[48px] h-[48px]", src: "https://flagcdn.com/w80/sg.png" },
+    { name: "Timor-Leste", emoji: "🇹🇱", rotate: "rotate-[17.53deg]", size: "w-[49px] h-[49px]", src: "https://flagcdn.com/w80/tl.png" },
+    { name: "Serbia", emoji: "🇷🇸", rotate: "rotate-[-10.85deg]", size: "w-[48px] h-[48px]", src: "https://flagcdn.com/w80/rs.png" },
+    { name: "India", emoji: "🇮🇳", rotate: "rotate-[25.19deg]", size: "w-[48px] h-[48px]", src: "https://flagcdn.com/w80/in.png" }
   ],
   [
-    { name: "Canada", emoji: "🇨🇦", rotate: "rotate-[-14.28deg]", size: "w-[47px] h-[47px]", src: "http://localhost:3845/assets/1e3a1d7856a946142c48a0bab25c8b5dfd1b3683.png" },
-    { name: "Argentina", emoji: "🇦🇷", rotate: "rotate-[19.89deg]", size: "w-[46px] h-[46px]", src: "http://localhost:3845/assets/20c5d0a4b693a58b541c8a1a45d3ff0172abbf30.png" },
-    { name: "Brunei", emoji: "🇧🇳", rotate: "rotate-[-16.66deg]", size: "w-[47px] h-[47.5px]", src: "http://localhost:3845/assets/6697cf034964830ed10f550e9cab60315e5e1029.png" },
-    { name: "Ceuta Melilla", emoji: "🇪🇸", rotate: "rotate-[23.48deg]", size: "w-[48px] h-[48px]", src: "http://localhost:3845/assets/78208e1b8c4cec249e0742cec453662e868bb2f6.png" },
-    { name: "Japan", emoji: "🇯🇵", rotate: "rotate-[-15.74deg]", size: "w-[53px] h-[53px]", src: "http://localhost:3845/assets/0f9b851c89d645c7e7f30c19ac44c999b663c5de.png" },
-    { name: "Croatia", emoji: "🇭🇷", rotate: "rotate-[14.95deg]", size: "w-[50px] h-[50.6px]", src: "http://localhost:3845/assets/0defcc8e0396ee6f4a39cff1fc671a38f96d793f.png" },
-    { name: "USA", emoji: "🇺🇸", rotate: "rotate-[-22.36deg]", size: "w-[49px] h-[49px]", src: "http://localhost:3845/assets/99b36f8d2cee0ffb5a8849e6a9bd1a65b47799b1.png" },
-    { name: "Bangladesh", emoji: "🇧🇩", rotate: "rotate-[19.13deg]", size: "w-[52px] h-[52.9px]", src: "http://localhost:3845/assets/512a44f8676044a690100259d53997b84cff4711.png" },
-    { name: "Chile", emoji: "🇨🇱", rotate: "rotate-[-11.78deg]", size: "w-[52px] h-[52.8px]", src: "http://localhost:3845/assets/5e22cd550a6b106bf1bd8fe8be7cfae2d08fc035.png" },
-    { name: "South Korea", emoji: "🇰🇷", rotate: "rotate-[11.84deg]", size: "w-[52px] h-[52px]", src: "http://localhost:3845/assets/cd0a29438a7b9a7468b30bf7389cc591c0378abe.png" }
+    { name: "Canada", emoji: "🇨🇦", rotate: "rotate-[-14.28deg]", size: "w-[47px] h-[47px]", src: "https://flagcdn.com/w80/ca.png" },
+    { name: "Argentina", emoji: "🇦🇷", rotate: "rotate-[19.89deg]", size: "w-[46px] h-[46px]", src: "https://flagcdn.com/w80/ar.png" },
+    { name: "Brunei", emoji: "🇧🇳", rotate: "rotate-[-16.66deg]", size: "w-[47px] h-[47.5px]", src: "https://flagcdn.com/w80/bn.png" },
+    { name: "Ceuta Melilla", emoji: "🇪🇸", rotate: "rotate-[23.48deg]", size: "w-[48px] h-[48px]", src: "https://flagcdn.com/w80/es.png" },
+    { name: "Japan", emoji: "🇯🇵", rotate: "rotate-[-15.74deg]", size: "w-[53px] h-[53px]", src: "https://flagcdn.com/w80/jp.png" },
+    { name: "Croatia", emoji: "🇭🇷", rotate: "rotate-[14.95deg]", size: "w-[50px] h-[50.6px]", src: "https://flagcdn.com/w80/hr.png" },
+    { name: "USA", emoji: "🇺🇸", rotate: "rotate-[-22.36deg]", size: "w-[49px] h-[49px]", src: "https://flagcdn.com/w80/us.png" },
+    { name: "Bangladesh", emoji: "🇧🇩", rotate: "rotate-[19.13deg]", size: "w-[52px] h-[52.9px]", src: "https://flagcdn.com/w80/bd.png" },
+    { name: "Chile", emoji: "🇨🇱", rotate: "rotate-[-11.78deg]", size: "w-[52px] h-[52.8px]", src: "https://flagcdn.com/w80/cl.png" },
+    { name: "South Korea", emoji: "🇰🇷", rotate: "rotate-[11.84deg]", size: "w-[52px] h-[52px]", src: "https://flagcdn.com/w80/kr.png" }
   ]
 ];
 
@@ -308,15 +308,16 @@ export default function SearchPage() {
 
         <div className="flex items-center gap-10">
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-bold text-gray-900">
-            <Link href="/search" className="flex items-center gap-2 text-blue-600 border-b-2 border-blue-600 pb-1 -mb-[22px] transition-colors">
+            <Link href="/search" className="relative flex items-center gap-2 text-blue-600 transition-colors">
               <SearchIcon className="w-[18px] h-[18px]" />
               Search
+              <span className="absolute -bottom-[22px] left-0 right-0 h-[2px] bg-blue-600" />
             </Link>
-            <Link href="/consult" className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600 border-b-2 border-transparent pb-1 -mb-[22px]">
+            <Link href="/consult" className="relative flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600">
               <ConsultIcon className="w-[18px] h-[18px]" />
               Consult
             </Link>
-            <Link href="/compare" className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600 border-b-2 border-transparent pb-1 -mb-[22px]">
+            <Link href="/compare" className="relative flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600">
               <CompareIcon className="w-[18px] h-[18px]" />
               Compare
             </Link>

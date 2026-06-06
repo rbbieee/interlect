@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ----------------------------------------------------
 // Icons (SVG Components)
@@ -87,6 +88,140 @@ function MedalIcon() {
   );
 }
 
+// Helper to resolve local logos
+function getLocalLogo(universityName) {
+  const norm = universityName.toLowerCase().trim();
+  if (norm.includes("harvard")) return "/harvard.png";
+  if (norm.includes("yale")) return "/yale.png";
+  if (norm.includes("princeton")) return "/princeton.png";
+  if (norm.includes("tokyo")) return "/tokyo.png";
+  if (norm.includes("ucla")) return "/ucla.png";
+  if (norm.includes("kyoto")) return "/kyoto.png";
+  if (norm.includes("malaya")) return "/malaya.png";
+  if (norm.includes("nara")) return "/nara.png";
+  return null;
+}
+
+// Helper to decide which logo URL to display for the university icon
+function getDisplayLogo(uni) {
+  if (!uni) return "/img/Logo.png";
+  const isImageLogo = uni.image && (
+    uni.image.toLowerCase().includes("logo") ||
+    uni.image.toLowerCase().includes("seal") ||
+    uni.image.toLowerCase().includes("shield") ||
+    uni.image.toLowerCase().includes("crest") ||
+    uni.image.toLowerCase().includes("emblem") ||
+    uni.image.toLowerCase().includes("symbol") ||
+    uni.image.toLowerCase().includes("coat_of_arms") ||
+    uni.image.toLowerCase().includes("insignia") ||
+    uni.image.toLowerCase().endsWith(".svg")
+  );
+
+  // If the uni.logo is the default placeholder, and the university image is a logo, use the image logo as the official logo!
+  if ((!uni.logo || uni.logo === "/img/Logo.png") && isImageLogo) {
+    return uni.image;
+  }
+  return uni.logo || "/img/Logo.png";
+}
+
+// Dedicated component to render campus photo with logo or spinner loading placeholders
+function CampusImage({ src, name }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [isSmallLogo, setIsSmallLogo] = useState(false);
+
+  const localLogo = getLocalLogo(name);
+
+  const isLogoByUrl = src && (
+    src.toLowerCase().includes("logo") ||
+    src.toLowerCase().includes("seal") ||
+    src.toLowerCase().includes("shield") ||
+    src.toLowerCase().includes("crest") ||
+    src.toLowerCase().includes("emblem") ||
+    src.toLowerCase().includes("symbol") ||
+    src.toLowerCase().includes("coat_of_arms") ||
+    src.toLowerCase().includes("insignia") ||
+    src.toLowerCase().endsWith(".svg")
+  );
+
+  const isLogo = isLogoByUrl || isSmallLogo;
+
+  return (
+    <div className="w-full h-full relative flex items-center justify-center bg-slate-50">
+      {/* Loading State Placeholder */}
+      {loading && (
+        <div className="absolute inset-0 size-full flex flex-col items-center justify-center bg-slate-50 z-10 p-6 animate-pulse">
+          {localLogo ? (
+            <div className="flex flex-col items-center gap-3">
+              <img 
+                src={localLogo} 
+                alt="Loading placeholder" 
+                className="max-h-16 max-w-[150px] object-contain opacity-60 filter grayscale animate-pulse" 
+              />
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Loading Photo...</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <svg className="w-7 h-7 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Loading...</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Error / Fallback State */}
+      {error ? (
+        <div className="absolute inset-0 size-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+          {localLogo ? (
+            <img 
+              src={localLogo} 
+              alt="University placeholder logo" 
+              className="max-h-20 max-w-[180px] object-contain opacity-45 filter grayscale" 
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-gray-300">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">No Photo Available</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={name}
+          className={`select-none transition-opacity duration-300 ${
+            loading ? "opacity-0" : "opacity-100"
+          } ${
+            isLogo 
+              ? "object-contain max-h-[80%] max-w-[80%] mx-auto" 
+              : "w-full h-full object-cover"
+          }`}
+          onLoad={(e) => {
+            setLoading(false);
+            const img = e.target;
+            if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+              const isSquare = Math.abs(img.naturalWidth / img.naturalHeight - 1) < 0.15;
+              const isSmall = img.naturalWidth < 450 && img.naturalHeight < 450;
+              if (isSmall || (isSquare && img.naturalWidth < 600)) {
+                setIsSmallLogo(true);
+              }
+            }
+          }}
+          onError={() => {
+            setError(true);
+            setLoading(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 // ----------------------------------------------------
 // Presets
 // ----------------------------------------------------
@@ -110,8 +245,11 @@ const PRESETS = [
 ];
 
 export default function ComparePage() {
+  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -132,7 +270,7 @@ export default function ComparePage() {
 
   const [unis, setUnis] = useState(["Harvard University", "Princeton University", "Yale University"]);
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Fetch helper
@@ -157,10 +295,34 @@ export default function ComparePage() {
 
   // Initial load
   useEffect(() => {
-    fetchComparison(unis);
+    if (typeof window !== 'undefined') {
+      const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      setIsLoggedIn(loggedIn);
+      if (loggedIn) {
+        setUserEmail(localStorage.getItem('userEmail') || "");
+        fetchComparison(unis);
+      } else {
+        setShowLoginModal(true);
+      }
+    }
   }, []);
 
+  useEffect(() => {
+    if (showLoginModal) {
+      if (countdown > 0) {
+        const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        router.push("/login");
+      }
+    }
+  }, [showLoginModal, countdown, router]);
+
   const handleCompare = () => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     // Filter empty inputs out
     const activeNames = unis.map(n => n.trim()).filter(n => n.length > 0);
     if (activeNames.length === 0) {
@@ -171,6 +333,10 @@ export default function ComparePage() {
   };
 
   const handlePreset = (presetUnis) => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     setUnis(presetUnis);
     fetchComparison(presetUnis);
   };
@@ -194,17 +360,18 @@ export default function ComparePage() {
 
         <div className="flex items-center gap-10">
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-bold text-gray-900">
-            <Link href="/search" className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600 border-b-2 border-transparent pb-1 -mb-[22px]">
+            <Link href="/search" className="relative flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600">
               <SearchIcon className="w-[18px] h-[18px]" />
               Search
             </Link>
-            <Link href="/consult" className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600 border-b-2 border-transparent pb-1 -mb-[22px]">
+            <Link href="/consult" className="relative flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600">
               <ConsultIcon className="w-[18px] h-[18px]" />
               Consult
             </Link>
-            <Link href="/compare" className="flex items-center gap-2 text-blue-600 border-b-2 border-blue-600 pb-1 -mb-[22px] transition-colors">
+            <Link href="/compare" className="relative flex items-center gap-2 text-blue-600 transition-colors">
               <CompareIcon className="w-[18px] h-[18px]" />
               Compare
+              <span className="absolute -bottom-[22px] left-0 right-0 h-[2px] bg-blue-600" />
             </Link>
           </nav>
 
@@ -379,20 +546,25 @@ export default function ComparePage() {
                 >
                   {/* Campus Image */}
                   <div className="aspect-[379/212] w-full relative rounded-2xl overflow-hidden shadow-inner bg-slate-100 flex items-center justify-center">
-                    <img
-                      src={uni.image}
-                      alt={uni.name}
-                      className="w-full h-full object-cover select-none"
-                      onError={(e) => {
-                        e.target.src = "/img/university-placeholder.jpg";
-                      }}
-                    />
+                    <CampusImage src={uni.image} name={uni.name} />
                   </div>
 
-                  {/* University Name */}
-                  <h3 className="text-xl md:text-[22px] font-bold text-black text-center tracking-tight min-h-[50px] flex items-center justify-center">
-                    {uni.name}
-                  </h3>
+                  {/* University Name & Logo */}
+                  <div className="flex items-center gap-4 justify-start min-h-[60px] border-t border-blue-200/40 pt-4 -mt-2">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-blue-100 p-1 flex-shrink-0 flex items-center justify-center shadow-sm">
+                      <img
+                        src={getDisplayLogo(uni)}
+                        alt={`${uni.name} Logo`}
+                        className="max-h-full max-w-full object-contain"
+                        onError={(e) => {
+                          e.target.src = "/img/Logo.png";
+                        }}
+                      />
+                    </div>
+                    <h3 className="text-[17px] md:text-[19px] font-bold text-black text-left leading-tight tracking-tight flex-grow">
+                      {uni.name}
+                    </h3>
+                  </div>
 
                   {/* Primary Metrics List */}
                   <div className="flex flex-col gap-3.5 border-t border-blue-200/50 pt-4">
@@ -610,6 +782,35 @@ export default function ComparePage() {
       <footer className="py-8 bg-gray-50 border-t border-gray-100 text-center text-xs font-bold text-gray-400">
         © 2026 Interlect. All rights reserved.
       </footer>
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border-2 border-gray-100 rounded-[32px] shadow-[0px_20px_50px_rgba(0,0,0,0.15)] max-w-md w-full p-8 relative flex flex-col items-center text-center animate-slide-up">
+            <div className="w-16 h-16 bg-blue-50 text-[#0066FF] rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">
+              Login Required
+            </h3>
+            
+            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+              You must log in to compare universities. Redirecting you to the login page in{" "}
+              <span className="font-extrabold text-[#0066FF] text-base">{countdown}</span> seconds...
+            </p>
+            
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full bg-[#0066FF] text-white py-3.5 rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-md active:scale-95 duration-150 cursor-pointer"
+            >
+              Go to Login Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ----------------------------------------------------
 // Icons
@@ -104,7 +105,7 @@ const consultants = [
     initials: "KA",
     avatarBg: "bg-[#ccc1f0]",
     cardBg: "bg-[#e2edfc]",
-    image: "http://localhost:3845/assets/612546e3d982984c16a054bdbd03b3ff03383a13.png",
+    image: "/kiyotaka.png",
     greeting: "Hey Rakha! How can I help you today?",
   },
   {
@@ -113,7 +114,7 @@ const consultants = [
     initials: "KK",
     avatarBg: "bg-[#b4e5bc]",
     cardBg: "bg-[#e2edfc]",
-    image: "http://localhost:3845/assets/7403f420667ef9a82ebc757070c7dcc9d60b9271.png",
+    image: "/kei.png",
     greeting: "Hi there! I'm Karuizawa Kei. Ready to find your ideal school?",
   },
   {
@@ -122,7 +123,7 @@ const consultants = [
     initials: "IY",
     avatarBg: "bg-[#f4ce9b]",
     cardBg: "bg-[#e2edfc]",
-    image: "http://localhost:3845/assets/4b5f4ef1982ec6672e2503261eebd452dea5062f.png",
+    image: "/itadori.png",
     greeting: "Ossu! Itadori here. Let me know what you need help with!",
   },
   {
@@ -131,7 +132,7 @@ const consultants = [
     initials: "GS",
     avatarBg: "bg-[#f3aba7]",
     cardBg: "bg-[#e2edfc]",
-    image: "http://localhost:3845/assets/d74ddae4c52a715626fc67925c011a400bc1c19e.png",
+    image: "/gojo.png",
     greeting: "Yo! Satoru Gojo in the house. What are we planning today?",
   },
   {
@@ -140,7 +141,7 @@ const consultants = [
     initials: "SH",
     avatarBg: "bg-[#f4ce9b]",
     cardBg: "bg-[#e2edfc]",
-    image: "http://localhost:3845/assets/2337ccd88ba0c6ef8ecd3a92bff94d078aeb52b5.png",
+    image: "/sakura.png",
     greeting: "Hello! Sakura here. How can I assist you with your academic path?",
   },
   {
@@ -149,7 +150,7 @@ const consultants = [
     initials: "MA",
     avatarBg: "bg-[#b8dff2]",
     cardBg: "bg-[#e2edfc]",
-    image: "http://localhost:3845/assets/ea33aa8af0fa153fce2d83ae11d595369dc64fee.png",
+    image: "/atsumu.png",
     greeting: "Hey! Atsumu here. Let's get your studies sorted out, yeah?",
   }
 ];
@@ -158,8 +159,11 @@ const consultants = [
 // Main Component
 // ----------------------------------------------------
 export default function ConsultPage() {
+  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -167,9 +171,22 @@ export default function ConsultPage() {
       setIsLoggedIn(loggedIn);
       if (loggedIn) {
         setUserEmail(localStorage.getItem('userEmail') || "");
+      } else {
+        setShowLoginModal(true);
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (showLoginModal) {
+      if (countdown > 0) {
+        const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        router.push("/login");
+      }
+    }
+  }, [showLoginModal, countdown, router]);
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
@@ -229,6 +246,10 @@ export default function ConsultPage() {
   };
 
   const handleOpenModal = (pro) => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     setSelectedPro(pro);
     setShowModal(true);
   };
@@ -316,7 +337,7 @@ export default function ConsultPage() {
 
         <div className="flex items-center gap-10">
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-bold text-gray-900">
-            <Link href="/search" className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600 border-b-2 border-transparent pb-1 -mb-[22px]">
+            <Link href="/search" className="relative flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600">
               <SearchIcon className="w-[18px] h-[18px]" />
               Search
             </Link>
@@ -328,12 +349,13 @@ export default function ConsultPage() {
                   setView("dashboard");
                 }
               }}
-              className="flex items-center gap-2 text-blue-600 border-b-2 border-blue-600 pb-1 -mb-[22px] transition-colors"
+              className="relative flex items-center gap-2 text-blue-600 transition-colors"
             >
               <ConsultIcon className="w-[18px] h-[18px]" />
               Consult
+              <span className="absolute -bottom-[22px] left-0 right-0 h-[2px] bg-blue-600" />
             </Link>
-            <Link href="/compare" className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600 border-b-2 border-transparent pb-1 -mb-[22px]">
+            <Link href="/compare" className="relative flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600">
               <CompareIcon className="w-[18px] h-[18px]" />
               Compare
             </Link>
@@ -789,6 +811,34 @@ export default function ConsultPage() {
         }
       `}</style>
 
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border-2 border-gray-100 rounded-[32px] shadow-[0px_20px_50px_rgba(0,0,0,0.15)] max-w-md w-full p-8 relative flex flex-col items-center text-center animate-slide-up">
+            <div className="w-16 h-16 bg-blue-50 text-[#0066FF] rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">
+              Login Required
+            </h3>
+            
+            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+              You must log in to consult with our professionals. Redirecting you to the login page in{" "}
+              <span className="font-extrabold text-[#0066FF] text-base">{countdown}</span> seconds...
+            </p>
+            
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full bg-[#0066FF] text-white py-3.5 rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-md active:scale-95 duration-150 cursor-pointer"
+            >
+              Go to Login Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
