@@ -16,4 +16,13 @@ export class User {
   }
 
   logout(): void {}
+
+  updateProfile(name: string, email: string): void {
+    this.name = name;
+    this.email = email;
+  }
+
+  changePassword(oldPassword: string, newPassword: string): void {
+    this.password = newPassword;
+  }
 }
