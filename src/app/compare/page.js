@@ -419,9 +419,15 @@ export default function ComparePage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setShowProfileModal(true)}
-                  className="text-sm font-semibold text-gray-700 hover:text-[#0066FF] transition-colors cursor-pointer"
+                  className="flex items-center gap-2.5 px-5 py-2.5 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-full hover:bg-gray-100 hover:text-[#0066FF] hover:border-gray-300 transition-colors cursor-pointer"
                 >
-                  {userName || userEmail}
+                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{userName || userEmail}</span>
+                  <svg className="w-[12px] h-[12px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
                 <button
                   onClick={handleLogout}
@@ -506,11 +512,11 @@ export default function ComparePage() {
                       <select
                         value={value}
                         onChange={(e) => handleInputChange(idx, e.target.value)}
-                        className="w-full px-5 py-3 bg-white border border-[#305687]/20 rounded-2xl shadow-sm focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] outline-none text-[15px] font-bold text-gray-800 transition-all appearance-none cursor-pointer pr-10"
+                        className="w-full px-5 py-3 bg-white border border-[#305687]/20 rounded-2xl shadow-sm focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] outline-none text-[15px] font-bold font-sans text-gray-800 transition-all appearance-none cursor-pointer pr-10"
                       >
-                        <option value="">Select a university...</option>
+                        <option value="" className="font-bold font-sans text-gray-800 bg-white">Select a university...</option>
                         {dbUniversities.map((uniName) => (
-                          <option key={uniName} value={uniName}>
+                          <option key={uniName} value={uniName} className="font-bold font-sans text-gray-800 bg-white">
                             {uniName}
                           </option>
                         ))}
