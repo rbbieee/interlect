@@ -10,7 +10,8 @@ CREATE TABLE Consultant (
     consultant_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     expertise VARCHAR(100) NOT NULL,
-    rating DOUBLE DEFAULT 0
+    rating DOUBLE DEFAULT 0,
+    email VARCHAR(100) UNIQUE
 );
 
 CREATE TABLE University (
@@ -18,7 +19,25 @@ CREATE TABLE University (
     name VARCHAR(100) NOT NULL,
     location VARCHAR(100) NOT NULL,
     rating DOUBLE DEFAULT 0,
-    tuition DOUBLE NOT NULL
+    tuition DOUBLE NOT NULL,
+    country VARCHAR(100),
+    type VARCHAR(50),
+    established VARCHAR(20),
+    size VARCHAR(50),
+    students VARCHAR(50),
+    international_students VARCHAR(50),
+    ranking VARCHAR(50),
+    majors TEXT,
+    research_opportunities TEXT,
+    academic_system VARCHAR(100),
+    graduation_rate VARCHAR(50),
+    acceptance_rate VARCHAR(50),
+    avg_gpa VARCHAR(50),
+    recommendation_letters TEXT,
+    personal_essay TEXT,
+    application_fee VARCHAR(50),
+    image_url VARCHAR(255),
+    logo_url VARCHAR(255)
 );
 
 -- Create dependent tables
@@ -62,6 +81,7 @@ CREATE TABLE ChatHistory (
     consultant_id INT,
     message TEXT NOT NULL,
     timestamp DATETIME,
+    sender VARCHAR(20) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (consultant_id) REFERENCES Consultant(consultant_id)
 );

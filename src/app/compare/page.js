@@ -153,10 +153,10 @@ function CampusImage({ src, name }) {
         <div className="absolute inset-0 size-full flex flex-col items-center justify-center bg-slate-50 z-10 p-6 animate-pulse">
           {localLogo ? (
             <div className="flex flex-col items-center gap-3">
-              <img 
-                src={localLogo} 
-                alt="Loading placeholder" 
-                className="max-h-16 max-w-[150px] object-contain opacity-60 filter grayscale animate-pulse" 
+              <img
+                src={localLogo}
+                alt="Loading placeholder"
+                className="max-h-16 max-w-[150px] object-contain opacity-60 filter grayscale animate-pulse"
               />
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Loading Photo...</span>
             </div>
@@ -176,10 +176,10 @@ function CampusImage({ src, name }) {
       {error ? (
         <div className="absolute inset-0 size-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
           {localLogo ? (
-            <img 
-              src={localLogo} 
-              alt="University placeholder logo" 
-              className="max-h-20 max-w-[180px] object-contain opacity-45 filter grayscale" 
+            <img
+              src={localLogo}
+              alt="University placeholder logo"
+              className="max-h-20 max-w-[180px] object-contain opacity-45 filter grayscale"
             />
           ) : (
             <div className="flex flex-col items-center gap-2 text-gray-300">
@@ -194,13 +194,11 @@ function CampusImage({ src, name }) {
         <img
           src={src}
           alt={name}
-          className={`select-none transition-opacity duration-300 ${
-            loading ? "opacity-0" : "opacity-100"
-          } ${
-            isLogo 
-              ? "object-contain max-h-[80%] max-w-[80%] mx-auto" 
+          className={`select-none transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"
+            } ${isLogo
+              ? "object-contain max-h-[80%] max-w-[80%] mx-auto"
               : "w-full h-full object-cover"
-          }`}
+            }`}
           onLoad={(e) => {
             setLoading(false);
             const img = e.target;
@@ -272,14 +270,16 @@ export default function ComparePage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [compareMode, setCompareMode] = useState("ai");
 
   // Fetch helper
-  const fetchComparison = async (namesArray) => {
+  const fetchComparison = async (namesArray, currentMode = compareMode) => {
     setLoading(true);
     setError(null);
     try {
       const query = namesArray.map(n => encodeURIComponent(n)).join(",");
-      const response = await fetch(`/api/compare?names=${query}`);
+      const endpoint = currentMode === "db" ? `/api/compare/db` : `/api/compare`;
+      const response = await fetch(`${endpoint}?names=${query}`);
       if (!response.ok) {
         throw new Error("Failed to load comparison data.");
       }
@@ -300,7 +300,7 @@ export default function ComparePage() {
       setIsLoggedIn(loggedIn);
       if (loggedIn) {
         setUserEmail(localStorage.getItem('userEmail') || "");
-        fetchComparison(unis);
+        fetchComparison(unis, "ai");
       } else {
         setShowLoginModal(true);
       }
@@ -329,7 +329,7 @@ export default function ComparePage() {
       setError("Please fill in at least one university name.");
       return;
     }
-    fetchComparison(activeNames);
+    fetchComparison(activeNames, compareMode);
   };
 
   const handlePreset = (presetUnis) => {
@@ -338,7 +338,7 @@ export default function ComparePage() {
       return;
     }
     setUnis(presetUnis);
-    fetchComparison(presetUnis);
+    fetchComparison(presetUnis, compareMode);
   };
 
   const handleInputChange = (idx, value) => {
@@ -349,7 +349,7 @@ export default function ComparePage() {
 
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col selection:bg-blue-100 selection:text-blue-800">
-      
+
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5 bg-white shadow-sm z-40 relative border-b border-gray-100">
         <div className="flex items-center">
@@ -404,7 +404,7 @@ export default function ComparePage() {
 
       {/* Main Container */}
       <main className="flex-grow py-12 px-4 max-w-7xl w-full mx-auto flex flex-col items-center">
-        
+
         {/* Title */}
         <div className="text-center mb-10">
           <span className="text-[#0066FF] font-bold uppercase tracking-wider text-xs px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
@@ -420,10 +420,38 @@ export default function ComparePage() {
 
         {/* Dynamic Selectors */}
         <div className="w-full bg-[#e2edfc]/40 border border-blue-100/60 rounded-3xl p-6 md:p-8 mb-12 shadow-sm">
-          <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-            📊 Select Universities to Compare
-          </h2>
-          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-blue-100/60">
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
+              📊 Select Universities to Compare
+            </h2>
+            <div className="flex bg-blue-50/85 p-1 rounded-full border border-blue-100 shadow-inner">
+              <button
+                onClick={() => {
+                  setCompareMode("ai");
+                  fetchComparison(unis, "ai");
+                }}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${compareMode === "ai"
+                    ? "bg-[#0066FF] text-white shadow-sm"
+                    : "text-gray-500 hover:text-blue-600"
+                  }`}
+              >
+                Global AI Compare
+              </button>
+              <button
+                onClick={() => {
+                  setCompareMode("db");
+                  fetchComparison(unis, "db");
+                }}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${compareMode === "db"
+                    ? "bg-[#0066FF] text-white shadow-sm"
+                    : "text-gray-500 hover:text-blue-600"
+                  }`}
+              >
+                Local Database Compare
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {unis.map((value, idx) => (
               <div key={idx} className="flex flex-col">
@@ -536,7 +564,7 @@ export default function ComparePage() {
           /* RENDER COMPARISON DATA */
           /* ---------------------------------------------------- */
           <div className="w-full flex flex-col items-center">
-            
+
             {/* Top Cards Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full mb-12">
               {data.map((uni, idx) => (
@@ -626,7 +654,7 @@ export default function ComparePage() {
 
             {/* Detailed Categories Tables */}
             <div className="w-full flex flex-col gap-10">
-              
+
               {/* Category 1: Academic Information */}
               <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 shadow-lg shadow-gray-200/40">
                 <div className="bg-[#e2edfc] px-8 py-3.5 rounded-xl text-lg font-bold text-gray-900 mb-6 tracking-wide">
@@ -792,16 +820,16 @@ export default function ComparePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            
+
             <h3 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">
               Login Required
             </h3>
-            
+
             <p className="text-gray-500 text-sm mb-6 leading-relaxed">
               You must log in to compare universities. Redirecting you to the login page in{" "}
               <span className="font-extrabold text-[#0066FF] text-base">{countdown}</span> seconds...
             </p>
-            
+
             <button
               onClick={() => router.push('/login')}
               className="w-full bg-[#0066FF] text-white py-3.5 rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-md active:scale-95 duration-150 cursor-pointer"

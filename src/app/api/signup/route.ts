@@ -29,10 +29,21 @@ export async function POST(req: Request) {
     }
 
     // Insert new user
+    const emailPrefix = email.split("@")[0];
+    const name = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+
     await db.query(
-      "INSERT INTO user (email, password) VALUES (?, ?)",
-      [email, password]
+      "INSERT INTO user (name, email, password) VALUES (?, ?, ?)",
+      [name, email, password]
     );
+
+    // If consultant email, also insert into Consultant table
+    if (email.endsWith("@interlect.com")) {
+      await db.query(
+        "INSERT INTO Consultant (name, expertise, rating, email) VALUES (?, ?, ?, ?)",
+        [name, "Educational Admissions", 5.0, email]
+      );
+    }
 
     return Response.json({ success: true });
   } catch (error) {

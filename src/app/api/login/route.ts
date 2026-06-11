@@ -11,11 +11,17 @@ export async function POST(req: Request) {
     );
 
     if (rows.length > 0) {
-      return Response.json({ success: true });
+      const user = rows[0];
+      return Response.json({
+        success: true,
+        userId: user.user_id,
+        email: user.email,
+        name: user.name
+      });
     } else {
-      return Response.json({ success: false });
+      return Response.json({ success: false, message: "Invalid email or password" });
     }
   } catch (error) {
-    return Response.json({ success: false });
+    return Response.json({ success: false, message: "Database connection failed" });
   }
 }
