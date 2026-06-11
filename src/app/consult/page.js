@@ -72,6 +72,22 @@ function SendIcon({ className = "w-5 h-5" }) {
   );
 }
 
+function MicOffIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z M3 3l18 18" />
+    </svg>
+  );
+}
+
+function CameraOffIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z M3 3l18 18" />
+    </svg>
+  );
+}
+
 // Helper for dynamic avatars without images
 const getInitials = (name) => {
   if (!name) return "?";
@@ -181,8 +197,23 @@ export default function ConsultPage() {
   const [inputText, setInputText] = useState("");
   const [callState, setCallState] = useState(null); // null, voice, video
   const [callTimer, setCallTimer] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
 
   const chatEndRef = useRef(null);
+
+  // WebRTC Call References and States
+  const peerConnectionRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  
+  const currentCallIdRef = useRef(null);
+  const peerEmailRef = useRef(null);
+  const isCallerRef = useRef(false);
+  const addedCandidatesRef = useRef(new Set());
+
+  const [incomingCall, setIncomingCall] = useState(null);
 
   // Timer effect for active call
   useEffect(() => {
@@ -203,6 +234,332 @@ export default function ConsultPage() {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [chatMessages, view, selectedStudent]);
+
+  // WebRTC signaling cleanup
+  const cleanUpCall = () => {
+    if (peerConnectionRef.current) {
+      try {
+        peerConnectionRef.current.close();
+      } catch (e) {}
+      peerConnectionRef.current = null;
+    }
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+    }
+    currentCallIdRef.current = null;
+    peerEmailRef.current = null;
+    isCallerRef.current = false;
+    addedCandidatesRef.current.clear();
+    setCallState(null);
+    setIsMuted(false);
+    setIsCameraOff(false);
+  };
+
+  // Hang up call
+  const handleHangUp = async () => {
+    if (currentCallIdRef.current) {
+      try {
+        await fetch("/api/consult/call", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "end",
+            callId: currentCallIdRef.current,
+          }),
+        });
+      } catch (err) {
+        console.error("Error ending call:", err);
+      }
+    }
+    cleanUpCall();
+  };
+
+  const toggleMute = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setIsMuted((prev) => !prev);
+    }
+  };
+
+  const toggleCamera = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setIsCameraOff((prev) => !prev);
+    }
+  };
+
+  // Peer connection initializer
+  const initPeerConnection = async (type) => {
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+    peerConnectionRef.current = pc;
+
+    // Send gathered ICE candidates to DB
+    pc.onicecandidate = (event) => {
+      if (event.candidate && currentCallIdRef.current) {
+        fetch("/api/consult/call", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "candidate",
+            callId: currentCallIdRef.current,
+            role: isCallerRef.current ? "caller" : "receiver",
+            candidate: event.candidate,
+          }),
+        }).catch((err) => console.error("Error sending candidate:", err));
+      }
+    };
+
+    // Receive remote tracks
+    pc.ontrack = (event) => {
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = event.streams[0];
+      }
+    };
+
+    // Get media devices stream
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: type === "video",
+        audio: true,
+      });
+      if (pc.signalingState === "closed") {
+        console.warn("Peer connection was closed while obtaining media devices.");
+        stream.getTracks().forEach((track) => track.stop());
+        return pc;
+      }
+      localStreamRef.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+      stream.getTracks().forEach((track) => {
+        if (pc.signalingState !== "closed") {
+          pc.addTrack(track, stream);
+        }
+      });
+    } catch (err) {
+      console.error("Error acquiring media devices:", err);
+    }
+
+    return pc;
+  };
+
+  // Student initiates a call
+  const handleStartCall = async (type) => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (!selectedPro) return;
+
+    peerEmailRef.current = selectedPro.email;
+    setCallState(type);
+    isCallerRef.current = true;
+    addedCandidatesRef.current.clear();
+
+    const pc = await initPeerConnection(type);
+
+    // Create SDP Offer
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    try {
+      const res = await fetch("/api/consult/call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "initiate",
+          callerEmail: userEmail,
+          receiverEmail: selectedPro.email,
+          callType: type,
+          sdpOffer: offer,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        currentCallIdRef.current = data.callId;
+      }
+    } catch (err) {
+      console.error("Error initiating call:", err);
+    }
+  };
+
+  // Consultant initiates a call from Student chat lists
+  const handleStartCallConsultant = async (type) => {
+    if (!isLoggedIn || !selectedStudent) return;
+
+    peerEmailRef.current = selectedStudent.userEmail;
+    setCallState(type);
+    isCallerRef.current = true;
+    addedCandidatesRef.current.clear();
+
+    // Mock selectedPro for layouts
+    setSelectedPro({ name: selectedStudent.userName, email: selectedStudent.userEmail });
+
+    const pc = await initPeerConnection(type);
+
+    // Create SDP Offer
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    try {
+      const res = await fetch("/api/consult/call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "initiate",
+          callerEmail: userEmail,
+          receiverEmail: selectedStudent.userEmail,
+          callType: type,
+          sdpOffer: offer,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        currentCallIdRef.current = data.callId;
+      }
+    } catch (err) {
+      console.error("Error initiating call from consultant:", err);
+    }
+  };
+
+  // Consultant accepts incoming call
+  const handleAcceptIncomingCall = async () => {
+    if (!incomingCall) return;
+
+    peerEmailRef.current = incomingCall.callerEmail;
+    setCallState(incomingCall.callType);
+    isCallerRef.current = false;
+    currentCallIdRef.current = incomingCall.id;
+    addedCandidatesRef.current.clear();
+
+    // Mock selectedPro for layouts
+    setSelectedPro({
+      name: incomingCall.callerEmail.split("@")[0],
+      email: incomingCall.callerEmail,
+    });
+
+    const pc = await initPeerConnection(incomingCall.callType);
+
+    // Set remote offer description
+    await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.sdpOffer));
+
+    // Create answer description
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    try {
+      await fetch("/api/consult/call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "answer",
+          callId: incomingCall.id,
+          sdpAnswer: answer,
+        }),
+      });
+    } catch (err) {
+      console.error("Error sending call answer:", err);
+    }
+
+    setIncomingCall(null);
+  };
+
+  // Consultant declines incoming call
+  const handleDeclineIncomingCall = async () => {
+    if (incomingCall) {
+      try {
+        await fetch("/api/consult/call", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "end",
+            callId: incomingCall.id,
+          }),
+        });
+      } catch (err) {
+        console.error("Error declining call:", err);
+      }
+      setIncomingCall(null);
+    }
+  };
+
+  // Poll call state and peer signals
+  useEffect(() => {
+    if (!isLoggedIn || !userEmail) return;
+
+    const pollCallSignaling = async () => {
+      try {
+        const peer = callState ? (peerEmailRef.current || (selectedPro ? selectedPro.email : null)) : null;
+        const url = peer 
+          ? `/api/consult/call?email=${encodeURIComponent(userEmail)}&peer=${encodeURIComponent(peer)}` 
+          : `/api/consult/call?email=${encodeURIComponent(userEmail)}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.success) return;
+
+        if (!callState) {
+          // Poll for incoming call if not in call
+          if (data.call && data.call.status === "ringing") {
+            setIncomingCall(data.call);
+          } else {
+            setIncomingCall(null);
+          }
+        } else {
+          // Poll call status and apply signals
+          const call = data.call;
+          if (currentCallIdRef.current) {
+            if (!call || call.id !== currentCallIdRef.current || call.status === "ended") {
+              cleanUpCall();
+              return;
+            }
+          }
+
+          const pc = peerConnectionRef.current;
+          if (!pc || pc.signalingState === "closed") return;
+
+          // If caller, set remote description once SDP answer is received
+          if (isCallerRef.current && call && call.sdpAnswer && !pc.remoteDescription) {
+            await pc.setRemoteDescription(new RTCSessionDescription(call.sdpAnswer));
+          }
+
+          // Apply peer's ICE candidates
+          if (call) {
+            const remoteCandidates = isCallerRef.current ? call.receiverIce : call.callerIce;
+            if (Array.isArray(remoteCandidates)) {
+              for (const candidate of remoteCandidates) {
+                const candidateStr = JSON.stringify(candidate);
+                if (!addedCandidatesRef.current.has(candidateStr)) {
+                  addedCandidatesRef.current.add(candidateStr);
+                  try {
+                    if (pc.signalingState !== "closed") {
+                      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
+                  } catch (e) {
+                    console.error("Error adding remote ICE candidate:", e);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error in call signaling poll loop:", err);
+      }
+    };
+
+    pollCallSignaling();
+    const interval = setInterval(pollCallSignaling, 2000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, userEmail, callState, selectedPro]);
 
   // Student View: Fetch consultant list from database
   useEffect(() => {
@@ -363,11 +720,10 @@ export default function ConsultPage() {
       return;
     }
     setSelectedPro(pro);
-    setShowModal(true);
+    setView("chat");
   };
 
   const handleStartChat = () => {
-    setShowModal(false);
     setView("chat");
   };
 
@@ -514,9 +870,25 @@ export default function ConsultPage() {
                     <h3 className="font-bold text-gray-900 text-[16px]">{selectedStudent.userName}</h3>
                     <p className="text-xs text-gray-400 mt-0.5">{selectedStudent.userEmail}</p>
                   </div>
-                  <div className="bg-green-50 text-green-600 border border-green-100 rounded-full px-4 py-1 text-xs font-semibold flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                    Student Inquiry
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleStartCallConsultant("video")}
+                      className="p-2 bg-blue-50 text-[#0066FF] hover:bg-blue-100 rounded-full transition-all cursor-pointer"
+                      title="Start Video Call"
+                    >
+                      <CameraIcon className="w-4.5 h-4.5" />
+                    </button>
+                    <button
+                      onClick={() => handleStartCallConsultant("voice")}
+                      className="p-2 bg-blue-50 text-[#0066FF] hover:bg-blue-100 rounded-full transition-all cursor-pointer"
+                      title="Start Voice Call"
+                    >
+                      <PhoneIcon className="w-4.5 h-4.5" />
+                    </button>
+                    <div className="bg-green-50 text-green-600 border border-green-100 rounded-full px-4 py-1 text-xs font-semibold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                      Student Inquiry
+                    </div>
                   </div>
                 </div>
 
@@ -734,7 +1106,7 @@ export default function ConsultPage() {
                 <div className="bg-white p-6 border-t border-gray-100 flex flex-col items-center gap-4 z-10">
                   <div className="flex items-center gap-4 w-full justify-center max-w-2xl">
                     <button
-                      onClick={() => setCallState("video")}
+                      onClick={() => handleStartCall("video")}
                       className="bg-[#0066FF] hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 py-3 px-6 rounded-full w-1/2 text-white font-semibold text-[14px] cursor-pointer shadow-md shadow-blue-500/20"
                     >
                       <CameraIcon className="w-4 h-4" />
@@ -742,7 +1114,7 @@ export default function ConsultPage() {
                     </button>
 
                     <button
-                      onClick={() => setCallState("voice")}
+                      onClick={() => handleStartCall("voice")}
                       className="bg-white border-2 border-[#0066FF] text-[#0066FF] hover:bg-blue-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 py-3 px-6 rounded-full w-1/2 font-semibold text-[14px] cursor-pointer"
                     >
                       <PhoneIcon className="w-4 h-4" />
@@ -773,144 +1145,155 @@ export default function ConsultPage() {
             </main>
           )}
 
-          {/* Modal Overlay for Student selection */}
-          {showModal && selectedPro && (
-            <div className="fixed inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-              <div className="bg-[#e2edfc] rounded-[34px] p-10 max-w-[980px] w-full flex flex-col items-center relative shadow-2xl shadow-blue-900/10 border border-white/40">
+        </>
+      )}
+
+      {/* Interactive Call Screens (Voice / Video Overlay) */}
+      {callState && selectedPro && (
+        <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6 text-white animate-fade-in">
+          {callState === "video" ? (
+            /* Video Call layout */
+            <div className="absolute inset-0 size-full overflow-hidden flex flex-col justify-between p-8">
+              <div className="absolute inset-0 bg-[#1e293b] flex items-center justify-center">
+                <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover z-0" />
+                <div className="text-[10rem] font-bold text-slate-800 opacity-60 z-0">
+                  {getInitials(selectedPro.name)}
+                </div>
+              </div>
+
+              {/* Self Video overlay */}
+              <div className="absolute top-8 right-8 w-32 h-48 md:w-44 md:h-60 rounded-2xl border-2 border-white/20 bg-slate-800/80 backdrop-blur-md overflow-hidden shadow-2xl z-20 flex flex-col items-center justify-center">
+                <video ref={localVideoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover z-10" />
+                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-lg font-bold text-white shadow-inner z-0">
+                  {getInitials(userName || "Student")}
+                </div>
+                <span className="text-[10px] text-white/60 mt-2 z-0">{userName || "You"}</span>
+              </div>
+
+              {/* Top call details */}
+              <div className="relative z-10 flex flex-col items-start bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/10 self-start">
+                <h3 className="font-bold text-lg md:text-xl text-white">{selectedPro.name}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-xs text-white/80 font-mono">{formatTimer(callTimer)}</span>
+                </div>
+              </div>
+
+              {/* Controls */}
+              <div className="relative z-30 flex items-center justify-center gap-6 self-center bg-slate-950/70 backdrop-blur-lg border border-white/10 px-8 py-5 rounded-full shadow-2xl mb-8">
                 <button
-                  onClick={() => setShowModal(false)}
-                  className="absolute top-6 right-6 text-gray-500 hover:text-gray-800 p-2 cursor-pointer transition-colors"
+                  onClick={toggleMute}
+                  className={`p-4 transition-all rounded-full active:scale-95 cursor-pointer ${
+                    isMuted ? "bg-red-600 hover:bg-red-700" : "bg-slate-800 hover:bg-slate-700"
+                  }`}
+                  title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                  {isMuted ? (
+                    <MicOffIcon className="w-5 h-5 text-white" />
+                  ) : (
+                    <MicIcon className="w-5 h-5 text-white" />
+                  )}
+                </button>
+                <button
+                  onClick={handleHangUp}
+                  className="p-5 bg-red-600 hover:bg-red-700 active:scale-95 transition-all rounded-full shadow-lg shadow-red-600/30 cursor-pointer"
+                  title="Hang Up"
+                >
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 3.5C21 3.5 19.5 2 17 2C14 2 12 4 12 7V8.5C9 8.5 6 9.5 4 11.5C2 13.5 2 17.5 2 17.5L5 20.5L8.5 17L7.5 14C7.5 14 9.5 12 12 12V13.5C12 16.5 14 18.5 17 18.5C19.5 18.5 21 17 21 17L21 3.5Z" className="origin-center rotate-[135deg]" />
                   </svg>
                 </button>
-
-                <div className="mb-6">
-                  <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full flex items-center justify-center font-bold text-[5rem] shadow-inner ${getAvatarBg(selectedPro.name)}`}>
+                <button
+                  onClick={toggleCamera}
+                  className={`p-4 transition-all rounded-full active:scale-95 cursor-pointer ${
+                    isCameraOff ? "bg-red-600 hover:bg-red-700" : "bg-slate-800 hover:bg-slate-700"
+                  }`}
+                  title={isCameraOff ? "Turn Camera On" : "Turn Camera Off"}
+                >
+                  {isCameraOff ? (
+                    <CameraOffIcon className="w-5 h-5 text-white" />
+                  ) : (
+                    <CameraIcon className="w-5 h-5 text-white" />
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Voice Call layout */
+            <div className="flex flex-col items-center justify-between h-full py-16 max-w-md w-full relative z-10">
+              <div className="flex flex-col items-center mt-12">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 rounded-full bg-blue-500/20 scale-125 animate-ping" />
+                  <div className="absolute inset-0 rounded-full bg-blue-500/10 scale-150 animate-pulse" />
+                  <div className={`w-40 h-40 md:w-48 md:h-48 border-4 border-slate-800 rounded-full flex items-center justify-center font-bold text-[4rem] shadow-inner ${getAvatarBg(selectedPro.name)}`}>
                     {getInitials(selectedPro.name)}
                   </div>
                 </div>
 
-                <h2 className="text-3xl md:text-[41px] font-bold text-gray-900 tracking-tight text-center mb-2">
-                  {selectedPro.name}
-                </h2>
-                
-                <p className="text-md text-blue-600 font-semibold mb-8">{selectedPro.expertise}</p>
+                <h3 className="text-2xl font-bold">{selectedPro.name}</h3>
+                <p className="text-gray-400 text-sm mt-2">Consulting via Voice Call</p>
+                <span className="text-blue-500 text-lg font-mono mt-4 block">{formatTimer(callTimer)}</span>
+              </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-6 w-full justify-center">
-                  <button
-                    onClick={() => {
-                      setShowModal(false);
-                      setCallState("voice");
-                    }}
-                    className="bg-[#0066FF] hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 py-4 px-8 rounded-full text-white font-semibold text-lg md:text-[20px] cursor-pointer shadow-lg shadow-blue-500/20 w-full sm:w-auto min-w-[280px]"
-                  >
-                    <PhoneIcon className="w-6 h-6" />
-                    <span>Consult via Call</span>
-                  </button>
-
-                  <button
-                    onClick={handleStartChat}
-                    className="bg-white border-[3px] border-[#0066FF] text-[#0066FF] hover:bg-blue-50 active:scale-[0.98] transition-all flex items-center justify-center gap-3 py-4 px-8 rounded-full font-semibold text-lg md:text-[20px] cursor-pointer w-full sm:w-auto min-w-[280px]"
-                  >
-                    <ConsultIcon className="w-6 h-6" />
-                    <span>Consult via Chat</span>
-                  </button>
-                </div>
+              <div className="flex items-center gap-8 bg-slate-800/50 backdrop-blur-md px-8 py-5 border border-white/5 rounded-full shadow-xl">
+                <button
+                  onClick={toggleMute}
+                  className={`p-4 transition-all rounded-full active:scale-95 cursor-pointer ${
+                    isMuted ? "bg-red-600 hover:bg-red-700" : "bg-slate-700 hover:bg-slate-600"
+                  }`}
+                  title={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? (
+                    <MicOffIcon className="w-5 h-5 text-white" />
+                  ) : (
+                    <MicIcon className="w-5 h-5 text-white" />
+                  )}
+                </button>
+                <button
+                  onClick={handleHangUp}
+                  className="p-5 bg-red-600 hover:bg-red-700 active:scale-95 transition-all rounded-full shadow-lg shadow-red-600/30 cursor-pointer"
+                  title="Hang Up"
+                >
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 3.5C21 3.5 19.5 2 17 2C14 2 12 4 12 7V8.5C9 8.5 6 9.5 4 11.5C2 13.5 2 17.5 2 17.5L5 20.5L8.5 17L7.5 14C7.5 14 9.5 12 12 12V13.5C12 16.5 14 18.5 17 18.5C19.5 18.5 21 17 21 17L21 3.5Z" className="origin-center rotate-[135deg]" />
+                  </svg>
+                </button>
+                <button className="p-4 bg-slate-700 hover:bg-slate-600 rounded-full" title="Speaker">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9.5H4.5v5h3.25L12 18.75z" />
+                  </svg>
+                </button>
               </div>
             </div>
           )}
+        </div>
+      )}
 
-          {/* Interactive Call Screens (Voice / Video Overlay Mocks) */}
-          {callState && selectedPro && (
-            <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6 text-white animate-fade-in">
-              {callState === "video" ? (
-                /* Video Call layout */
-                <div className="absolute inset-0 size-full overflow-hidden flex flex-col justify-between p-8">
-                  <div className="absolute inset-0 bg-[#1e293b] flex items-center justify-center">
-                    <div className="text-[10rem] font-bold text-slate-800 opacity-60">
-                      {getInitials(selectedPro.name)}
-                    </div>
-                  </div>
-
-                  {/* Self Video overlay */}
-                  <div className="absolute top-8 right-8 w-32 h-48 md:w-44 md:h-60 rounded-2xl border-2 border-white/20 bg-slate-800/80 backdrop-blur-md overflow-hidden shadow-2xl z-10 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-lg font-bold text-white shadow-inner">
-                      {getInitials(userName || "Student")}
-                    </div>
-                    <span className="text-[10px] text-white/60 mt-2">{userName || "You"}</span>
-                  </div>
-
-                  {/* Top call details */}
-                  <div className="relative z-10 flex flex-col items-start bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/10 self-start">
-                    <h3 className="font-bold text-lg md:text-xl text-white">{selectedPro.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-xs text-white/80 font-mono">{formatTimer(callTimer)}</span>
-                    </div>
-                  </div>
-
-                  {/* Controls */}
-                  <div className="relative z-10 flex items-center justify-center gap-6 self-center bg-slate-950/70 backdrop-blur-lg border border-white/10 px-8 py-5 rounded-full shadow-2xl mb-8">
-                    <button className="p-4 bg-slate-800 hover:bg-slate-700 active:scale-95 transition-all rounded-full" title="Mute Microphone">
-                      <MicIcon className="w-5 h-5 text-white" />
-                    </button>
-                    <button
-                      onClick={() => setCallState(null)}
-                      className="p-5 bg-red-600 hover:bg-red-700 active:scale-95 transition-all rounded-full shadow-lg shadow-red-600/30"
-                      title="Hang Up"
-                    >
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M21 3.5C21 3.5 19.5 2 17 2C14 2 12 4 12 7V8.5C9 8.5 6 9.5 4 11.5C2 13.5 2 17.5 2 17.5L5 20.5L8.5 17L7.5 14C7.5 14 9.5 12 12 12V13.5C12 16.5 14 18.5 17 18.5C19.5 18.5 21 17 21 17L21 3.5Z" className="origin-center rotate-[135deg]" />
-                      </svg>
-                    </button>
-                    <button className="p-4 bg-slate-800 hover:bg-slate-700 active:scale-95 transition-all rounded-full" title="Turn Camera Off">
-                      <CameraIcon className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Voice Call layout */
-                <div className="flex flex-col items-center justify-between h-full py-16 max-w-md w-full relative z-10">
-                  <div className="flex flex-col items-center mt-12">
-                    <div className="relative mb-8">
-                      <div className="absolute inset-0 rounded-full bg-blue-500/20 scale-125 animate-ping" />
-                      <div className="absolute inset-0 rounded-full bg-blue-500/10 scale-150 animate-pulse" />
-                      <div className={`w-40 h-40 md:w-48 md:h-48 border-4 border-slate-800 rounded-full flex items-center justify-center font-bold text-[4rem] shadow-inner ${getAvatarBg(selectedPro.name)}`}>
-                        {getInitials(selectedPro.name)}
-                      </div>
-                    </div>
-
-                    <h3 className="text-2xl font-bold">{selectedPro.name}</h3>
-                    <p className="text-gray-400 text-sm mt-2">Consulting via Voice Call</p>
-                    <span className="text-blue-500 text-lg font-mono mt-4 block">{formatTimer(callTimer)}</span>
-                  </div>
-
-                  <div className="flex items-center gap-8 bg-slate-800/50 backdrop-blur-md px-8 py-5 border border-white/5 rounded-full shadow-xl">
-                    <button className="p-4 bg-slate-700 hover:bg-slate-600 rounded-full" title="Mute">
-                      <MicIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setCallState(null)}
-                      className="p-5 bg-red-600 hover:bg-red-700 active:scale-95 transition-all rounded-full shadow-lg shadow-red-600/30"
-                      title="Hang Up"
-                    >
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M21 3.5C21 3.5 19.5 2 17 2C14 2 12 4 12 7V8.5C9 8.5 6 9.5 4 11.5C2 13.5 2 17.5 2 17.5L5 20.5L8.5 17L7.5 14C7.5 14 9.5 12 12 12V13.5C12 16.5 14 18.5 17 18.5C19.5 18.5 21 17 21 17L21 3.5Z" className="origin-center rotate-[135deg]" />
-                      </svg>
-                    </button>
-                    <button className="p-4 bg-slate-700 hover:bg-slate-600 rounded-full" title="Speaker">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9.5H4.5v5h3.25L12 18.75z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </>
+      {/* Incoming Call Notification Overlay */}
+      {incomingCall && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl z-50 flex items-center gap-6 text-white animate-fade-in">
+          <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-lg animate-pulse">
+            {getInitials(incomingCall.callerEmail)}
+          </div>
+          <div className="text-left">
+            <h4 className="font-bold text-sm">Incoming {incomingCall.callType} call</h4>
+            <p className="text-xs text-gray-400 mt-0.5">{incomingCall.callerEmail}</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleAcceptIncomingCall}
+              className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-full text-xs font-bold transition-all cursor-pointer"
+            >
+              Accept
+            </button>
+            <button
+              onClick={handleDeclineIncomingCall}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-full text-xs font-bold transition-all cursor-pointer"
+            >
+              Decline
+            </button>
+          </div>
+        </div>
       )}
 
       {/* CSS Animations Injector */}

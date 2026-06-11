@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import ProfileModal from "../../components/ProfileModal";
+import AIChatWidget from "../../components/AIChatWidget";
 
 // ----------------------------------------------------
 // Icons
@@ -667,6 +668,7 @@ export default function SearchPage() {
           localStorage.setItem("userName", updatedName);
         }}
       />
+      <AIChatWidget isLoggedIn={isLoggedIn} />
     </div>
   );
 }

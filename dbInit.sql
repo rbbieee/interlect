@@ -107,3 +107,16 @@ CREATE TABLE Payment (
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (application_id) REFERENCES Application(application_id)
 );
+
+CREATE TABLE VideoCallSession (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    caller_email VARCHAR(100) NOT NULL,
+    receiver_email VARCHAR(100) NOT NULL,
+    call_type VARCHAR(20) NOT NULL,
+    sdp_offer TEXT,
+    sdp_answer TEXT,
+    caller_ice TEXT,
+    receiver_ice TEXT,
+    status VARCHAR(20) DEFAULT 'ringing',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

@@ -5,6 +5,12 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const namesQuery = searchParams.get('names');
+    const listOnly = searchParams.get('list') === 'true';
+
+    if (listOnly) {
+      const [rows] = await db.query("SELECT name FROM University ORDER BY name ASC");
+      return NextResponse.json({ universities: rows.map(r => r.name) });
+    }
 
     let universityNames = [];
     if (namesQuery) {

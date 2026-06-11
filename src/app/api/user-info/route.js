@@ -16,7 +16,17 @@ export async function GET(request) {
     );
 
     if (rows.length > 0) {
-      return NextResponse.json(rows[0]);
+      const userData = rows[0];
+      if (email.endsWith("@interlect.com")) {
+        const [consultantRows] = await db.query(
+          "SELECT expertise FROM Consultant WHERE email = ?",
+          [email]
+        );
+        if (consultantRows.length > 0) {
+          userData.expertise = consultantRows[0].expertise;
+        }
+      }
+      return NextResponse.json(userData);
     } else {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ProfileModal from "../../components/ProfileModal";
+import AIChatWidget from "../../components/AIChatWidget";
 
 // ----------------------------------------------------
 // Icons (SVG Components)
@@ -291,9 +292,21 @@ export default function ComparePage() {
 
   const [unis, setUnis] = useState(["Harvard University", "Princeton University", "Yale University"]);
   const [data, setData] = useState([]);
+  const [dbUniversities, setDbUniversities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [compareMode, setCompareMode] = useState("ai");
+
+  useEffect(() => {
+    fetch("/api/compare/db?list=true")
+      .then(res => res.json())
+      .then(data => {
+        if (data.universities) {
+          setDbUniversities(data.universities);
+        }
+      })
+      .catch(err => console.error("Error fetching db universities:", err));
+  }, []);
 
   // Fetch helper
   const fetchComparison = async (namesArray, currentMode = compareMode) => {
@@ -488,20 +501,44 @@ export default function ComparePage() {
                   University {idx + 1}
                 </label>
                 <div className="relative">
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => handleInputChange(idx, e.target.value)}
-                    placeholder="Enter university name..."
-                    className="w-full px-5 py-3 bg-white border border-[#305687]/20 rounded-2xl shadow-sm focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] outline-none text-[15px] font-bold text-gray-800 placeholder-gray-400 transition-all"
-                  />
-                  {value && (
-                    <button
-                      onClick={() => handleInputChange(idx, "")}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
-                    >
-                      ✕
-                    </button>
+                  {compareMode === "db" ? (
+                    <>
+                      <select
+                        value={value}
+                        onChange={(e) => handleInputChange(idx, e.target.value)}
+                        className="w-full px-5 py-3 bg-white border border-[#305687]/20 rounded-2xl shadow-sm focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] outline-none text-[15px] font-bold text-gray-800 transition-all appearance-none cursor-pointer pr-10"
+                      >
+                        <option value="">Select a university...</option>
+                        {dbUniversities.map((uniName) => (
+                          <option key={uniName} value={uniName}>
+                            {uniName}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => handleInputChange(idx, e.target.value)}
+                        placeholder="Enter university name..."
+                        className="w-full px-5 py-3 bg-white border border-[#305687]/20 rounded-2xl shadow-sm focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] outline-none text-[15px] font-bold text-gray-800 placeholder-gray-400 transition-all"
+                      />
+                      {value && (
+                        <button
+                          onClick={() => handleInputChange(idx, "")}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -882,6 +919,7 @@ export default function ComparePage() {
           localStorage.setItem("userName", updatedName);
         }}
       />
+      <AIChatWidget isLoggedIn={isLoggedIn} />
     </div>
   );
 }

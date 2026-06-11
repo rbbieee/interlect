@@ -4,7 +4,7 @@ import db from "../../../lib/db";
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { userId, name, email, password, currentPassword } = body;
+    const { userId, name, email, password, currentPassword, expertise } = body;
 
     if (!userId || !currentPassword) {
       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
@@ -25,6 +25,8 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "Incorrect current password" });
     }
 
+    const isConsultant = dbUser.email.endsWith("@interlect.com");
+
     // 2. Perform updates
     const updates = [];
     const params = [];
@@ -34,7 +36,7 @@ export async function POST(request) {
       params.push(name);
 
       // If user is a consultant (email ends with @interlect.com), also update Consultant name
-      if (dbUser.email.endsWith("@interlect.com")) {
+      if (isConsultant) {
         await db.query(
           "UPDATE Consultant SET name = ? WHERE email = ?",
           [name, dbUser.email]
@@ -56,7 +58,7 @@ export async function POST(request) {
       params.push(email);
 
       // If this user is a consultant, also update the Consultant email link
-      if (dbUser.email.endsWith("@interlect.com") || email.endsWith("@interlect.com")) {
+      if (isConsultant || email.endsWith("@interlect.com")) {
         await db.query(
           "UPDATE Consultant SET email = ? WHERE email = ?",
           [email, dbUser.email]
@@ -77,11 +79,31 @@ export async function POST(request) {
       );
     }
 
+    // Update consultant expertise if provided
+    if (isConsultant && expertise) {
+      await db.query(
+        "UPDATE Consultant SET expertise = ? WHERE email = ?",
+        [expertise, email || dbUser.email]
+      );
+    }
+
+    let finalExpertise = null;
+    if (isConsultant) {
+      const [consRows] = await db.query(
+        "SELECT expertise FROM Consultant WHERE email = ?",
+        [email || dbUser.email]
+      );
+      if (consRows.length > 0) {
+        finalExpertise = consRows[0].expertise;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       user: {
         name: name || dbUser.name,
-        email: email || dbUser.email
+        email: email || dbUser.email,
+        expertise: finalExpertise
       }
     });
   } catch (error) {

@@ -7,8 +7,11 @@ export default function ProfileModal({ isOpen, onClose, userId, initialName, ini
   const [email, setEmail] = useState(initialEmail || "");
   const [password, setPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [expertise, setExpertise] = useState("");
   const [error, setError] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
+
+  const isConsultant = initialEmail && initialEmail.endsWith("@interlect.com");
 
   useEffect(() => {
     setName(initialName || "");
@@ -16,6 +19,18 @@ export default function ProfileModal({ isOpen, onClose, userId, initialName, ini
     setPassword("");
     setCurrentPassword("");
     setError(null);
+    setExpertise("");
+
+    if (isOpen && initialEmail && initialEmail.endsWith("@interlect.com")) {
+      fetch(`/api/user-info?email=${encodeURIComponent(initialEmail)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.expertise) {
+            setExpertise(data.expertise);
+          }
+        })
+        .catch((err) => console.error("Error fetching consultant expertise:", err));
+    }
   }, [isOpen, initialName, initialEmail]);
 
   if (!isOpen) return null;
@@ -33,7 +48,8 @@ export default function ProfileModal({ isOpen, onClose, userId, initialName, ini
           name,
           email,
           password: password || undefined,
-          currentPassword
+          currentPassword,
+          expertise: isConsultant ? expertise : undefined
         })
       });
 
@@ -95,6 +111,21 @@ export default function ProfileModal({ isOpen, onClose, userId, initialName, ini
                 placeholder="Enter new email"
               />
             </div>
+
+            {isConsultant && (
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1.5">
+                  Expertise
+                </label>
+                <input
+                  type="text"
+                  value={expertise}
+                  onChange={e => setExpertise(e.target.value)}
+                  className="w-full h-11 px-4 border border-[#c1cfee] rounded-xl focus:outline-none focus:border-blue-500 text-sm font-semibold"
+                  placeholder="Enter expertise (e.g. Admissions, Financial Aid)"
+                />
+              </div>
+            )}
 
             <div>
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1.5">
