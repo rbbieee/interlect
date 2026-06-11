@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ProfileModal from "../../components/ProfileModal";
 
 // ----------------------------------------------------
 // Icons (SVG Components)
@@ -246,6 +247,9 @@ export default function ComparePage() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [countdown, setCountdown] = useState(3);
 
@@ -254,7 +258,22 @@ export default function ComparePage() {
       const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
       setIsLoggedIn(loggedIn);
       if (loggedIn) {
-        setUserEmail(localStorage.getItem('userEmail') || "");
+        const email = localStorage.getItem('userEmail') || "";
+        setUserEmail(email);
+        const storedName = localStorage.getItem('userName') || "";
+        setUserName(storedName);
+
+        fetch(`/api/user-info?email=${encodeURIComponent(email)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.userId) {
+              setUserId(data.userId);
+              setUserName(data.name || "");
+              localStorage.setItem("userId", data.userId);
+              localStorage.setItem("userName", data.name || "");
+            }
+          })
+          .catch(err => console.error("Error fetching user info:", err));
       }
     }
   }, []);
@@ -262,8 +281,12 @@ export default function ComparePage() {
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
     setIsLoggedIn(false);
     setUserEmail("");
+    setUserId(null);
+    setUserName("");
   };
 
   const [unis, setUnis] = useState(["Harvard University", "Princeton University", "Yale University"]);
@@ -299,7 +322,10 @@ export default function ComparePage() {
       const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
       setIsLoggedIn(loggedIn);
       if (loggedIn) {
-        setUserEmail(localStorage.getItem('userEmail') || "");
+        const email = localStorage.getItem('userEmail') || "";
+        setUserEmail(email);
+        const storedName = localStorage.getItem('userName') || "";
+        setUserName(storedName);
         fetchComparison(unis, "ai");
       } else {
         setShowLoginModal(true);
@@ -378,9 +404,12 @@ export default function ComparePage() {
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <span className="text-sm font-semibold text-gray-700 hidden sm:inline">
-                  {userEmail}
-                </span>
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="text-sm font-semibold text-gray-700 hover:text-[#0066FF] transition-colors cursor-pointer"
+                >
+                  {userName || userEmail}
+                </button>
                 <button
                   onClick={handleLogout}
                   className="px-6 py-2.5 text-sm font-bold text-red-600 rounded-full border-[1.5px] border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
@@ -422,7 +451,7 @@ export default function ComparePage() {
         <div className="w-full bg-[#e2edfc]/40 border border-blue-100/60 rounded-3xl p-6 md:p-8 mb-12 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-blue-100/60">
             <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
-              📊 Select Universities to Compare
+              Select Universities to Compare
             </h2>
             <div className="flex bg-blue-50/85 p-1 rounded-full border border-blue-100 shadow-inner">
               <button
@@ -431,8 +460,8 @@ export default function ComparePage() {
                   fetchComparison(unis, "ai");
                 }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${compareMode === "ai"
-                    ? "bg-[#0066FF] text-white shadow-sm"
-                    : "text-gray-500 hover:text-blue-600"
+                  ? "bg-[#0066FF] text-white shadow-sm"
+                  : "text-gray-500 hover:text-blue-600"
                   }`}
               >
                 Global AI Compare
@@ -443,8 +472,8 @@ export default function ComparePage() {
                   fetchComparison(unis, "db");
                 }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${compareMode === "db"
-                    ? "bg-[#0066FF] text-white shadow-sm"
-                    : "text-gray-500 hover:text-blue-600"
+                  ? "bg-[#0066FF] text-white shadow-sm"
+                  : "text-gray-500 hover:text-blue-600"
                   }`}
               >
                 Local Database Compare
@@ -839,6 +868,20 @@ export default function ComparePage() {
           </div>
         </div>
       )}
+      {/* Profile Edit Modal */}
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        userId={userId}
+        initialName={userName}
+        initialEmail={userEmail}
+        onUpdateSuccess={(updatedName, updatedEmail) => {
+          setUserName(updatedName);
+          setUserEmail(updatedEmail);
+          localStorage.setItem("userEmail", updatedEmail);
+          localStorage.setItem("userName", updatedName);
+        }}
+      />
     </div>
   );
 }

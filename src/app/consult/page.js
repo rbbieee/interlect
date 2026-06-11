@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ProfileModal from "../../components/ProfileModal";
 
 // ----------------------------------------------------
 // Icons
@@ -110,6 +111,7 @@ export default function ConsultPage() {
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [countdown, setCountdown] = useState(3);
 
   // Load user session
@@ -410,9 +412,12 @@ export default function ConsultPage() {
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <span className="text-sm font-semibold text-gray-700 hidden sm:inline">
-                  {userEmail}
-                </span>
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="text-sm font-semibold text-gray-700 hover:text-[#0066FF] transition-colors cursor-pointer"
+                >
+                  {userName || userEmail}
+                </button>
                 <button
                   onClick={handleLogout}
                   className="px-6 py-2.5 text-sm font-bold text-red-600 rounded-full border-[1.5px] border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
@@ -947,6 +952,20 @@ export default function ConsultPage() {
           </div>
         </div>
       )}
+      {/* Profile Edit Modal */}
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        userId={userId}
+        initialName={userName}
+        initialEmail={userEmail}
+        onUpdateSuccess={(updatedName, updatedEmail) => {
+          setUserName(updatedName);
+          setUserEmail(updatedEmail);
+          localStorage.setItem("userEmail", updatedEmail);
+          localStorage.setItem("userName", updatedName);
+        }}
+      />
     </div>
   );
 }
