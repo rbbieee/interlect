@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import ProfileModal from "../../components/ProfileModal";
-import AIChatWidget from "../../components/AIChatWidget";
+import ProfileModal from "@/components/ProfileModal";
+import AIChatWidget from "@/components/AIChatWidget";
+
+interface IconProps {
+  className?: string;
+}
 
 // ----------------------------------------------------
 // Icons
 // ----------------------------------------------------
-function SearchIcon({ className = "w-5 h-5" }) {
+function SearchIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -16,7 +20,7 @@ function SearchIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function ConsultIcon({ className = "w-5 h-5" }) {
+function ConsultIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -24,7 +28,7 @@ function ConsultIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function CompareIcon({ className = "w-5 h-5" }) {
+function CompareIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -32,10 +36,18 @@ function CompareIcon({ className = "w-5 h-5" }) {
   );
 }
 
+interface FlagItem {
+  name: string;
+  emoji: string;
+  rotate: string;
+  size: string;
+  src: string;
+}
+
 // ----------------------------------------------------
 // Flag Data & Fallback Component
 // ----------------------------------------------------
-const flagRows = [
+const flagRows: FlagItem[][] = [
   [
     { name: "Malaysia", emoji: "🇲🇾", rotate: "rotate-[-26.92deg]", size: "w-[43px] h-[45px] md:w-[48px] md:h-[50px]", src: "https://flagcdn.com/w80/my.png" },
     { name: "Philippines", emoji: "🇵🇭", rotate: "rotate-[14.59deg]", size: "w-[46px] h-[51px] md:w-[50px] md:h-[55px]", src: "https://flagcdn.com/w80/ph.png" },
@@ -74,8 +86,15 @@ const flagRows = [
   ]
 ];
 
-const FlagImage = ({ src, emoji, name, size = "w-12 h-12" }) => {
-  const [error, setError] = useState(false);
+interface FlagImageProps {
+  src: string;
+  emoji: string;
+  name: string;
+  size?: string;
+}
+
+const FlagImage = ({ src, emoji, name, size = "w-12 h-12" }: FlagImageProps) => {
+  const [error, setError] = useState<boolean>(false);
 
   return (
     <div className={`relative flex items-center justify-center ${size} select-none`}>
@@ -93,10 +112,29 @@ const FlagImage = ({ src, emoji, name, size = "w-12 h-12" }) => {
   );
 };
 
+interface UniversityDetails {
+  degree: string;
+  allowance: string;
+  requirements: string;
+  deadline: string;
+  description: string;
+}
+
+interface UniversityItem {
+  id: string;
+  name: string;
+  location: string;
+  country: string;
+  logo: string;
+  scholarship: string;
+  coverage: string;
+  details: UniversityDetails;
+}
+
 // ----------------------------------------------------
 // Mock Scholarship Directory Database
 // ----------------------------------------------------
-const universities = [
+const universities: UniversityItem[] = [
   {
     id: "tokyo",
     name: "The University of Tokyo",
@@ -231,11 +269,11 @@ const universities = [
 // Main Component
 // ----------------------------------------------------
 export default function SearchPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userName, setUserName] = useState("");
-  const [userId, setUserId] = useState(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [userId, setUserId] = useState<number | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -273,10 +311,10 @@ export default function SearchPage() {
     setUserName("");
   };
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState(null);
-  const [filteredUnis, setFilteredUnis] = useState(universities);
-  const [activeUni, setActiveUni] = useState(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [filteredUnis, setFilteredUnis] = useState<UniversityItem[]>(universities);
+  const [activeUni, setActiveUni] = useState<UniversityItem | null>(null);
 
   // Filter effect
   useEffect(() => {
@@ -299,11 +337,11 @@ export default function SearchPage() {
     setFilteredUnis(results);
   }, [searchQuery, selectedCountry]);
 
-  const handleFlagClick = (countryName) => {
+  const handleFlagClick = (countryName: string) => {
     // Map flag names to database countries
     let target = countryName;
     if (countryName === "USA" || countryName === "Us Outlying Islands") target = "USA";
-    if (countryName === "England") target = "UK"; // or UK/England
+    if (countryName === "England") target = "UK";
     
     if (selectedCountry && selectedCountry.toLowerCase() === target.toLowerCase()) {
       setSelectedCountry(null); // Toggle off
@@ -465,7 +503,7 @@ export default function SearchPage() {
                 {searchQuery && (
                   <span className="bg-blue-50 text-blue-700 font-semibold px-3 py-1 rounded-full border border-blue-100 flex items-center gap-1.5">
                     🔍 "{searchQuery}"
-                    <button onClick={() => setSearchQuery("")} className="hover:text-red-500 font-bold">×</button>
+                    <button onClick={() => setSearchQuery("")} className="hover:text-red-500 font-bold"> </button>
                   </span>
                 )}
               </div>
@@ -639,26 +677,6 @@ export default function SearchPage() {
         )}
 
       </main>
-
-      {/* ---------------------------------------------------- */}
-      {/* CSS Animations Injector */}
-      {/* ---------------------------------------------------- */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.2s ease-out forwards;
-        }
-        .animate-slide-up {
-          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
 
       {/* Profile Edit Modal */}
       <ProfileModal

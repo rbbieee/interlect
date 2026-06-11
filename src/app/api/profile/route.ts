@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import db from "../../../lib/db";
+import db from "@/lib/db";
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { userId, name, email, password, currentPassword, expertise } = body;
@@ -11,7 +11,7 @@ export async function POST(request) {
     }
 
     // 1. Verify current password
-    const [rows] = await db.query(
+    const [rows]: any = await db.query(
       "SELECT * FROM user WHERE user_id = ?",
       [userId]
     );
@@ -28,8 +28,8 @@ export async function POST(request) {
     const isConsultant = dbUser.email.endsWith("@interlect.com");
 
     // 2. Perform updates
-    const updates = [];
-    const params = [];
+    const updates: string[] = [];
+    const params: any[] = [];
 
     if (name && name !== dbUser.name) {
       updates.push("name = ?");
@@ -46,7 +46,7 @@ export async function POST(request) {
 
     if (email && email !== dbUser.email) {
       // Check if the new email is already taken
-      const [emailCheck] = await db.query(
+      const [emailCheck]: any = await db.query(
         "SELECT * FROM user WHERE email = ? AND user_id != ?",
         [email, userId]
       );
@@ -89,7 +89,7 @@ export async function POST(request) {
 
     let finalExpertise = null;
     if (isConsultant) {
-      const [consRows] = await db.query(
+      const [consRows]: any = await db.query(
         "SELECT expertise FROM Consultant WHERE email = ?",
         [email || dbUser.email]
       );

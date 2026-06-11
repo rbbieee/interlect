@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import db from "../../../../lib/db";
+import db from "@/lib/db";
 
-export async function GET(request) {
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email");
 
@@ -11,7 +11,7 @@ export async function GET(request) {
 
   try {
     // 1. Get consultantId
-    const [consultantRows] = await db.query(
+    const [consultantRows]: any = await db.query(
       "SELECT consultant_id FROM Consultant WHERE email = ?",
       [email]
     );
@@ -23,9 +23,9 @@ export async function GET(request) {
     const consultantId = consultantRows[0].consultant_id;
 
     // 2. Query distinct students/users with latest message
-    const [conversations] = await db.query(
+    const [conversations]: any = await db.query(
       `SELECT u.user_id as userId, u.name as userName, u.email as userEmail, ch.message, ch.timestamp, ch.sender
-       FROM User u
+       FROM user u
        JOIN ChatHistory ch ON u.user_id = ch.user_id
        WHERE ch.consultant_id = ?
          AND ch.timestamp = (

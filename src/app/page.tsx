@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import ProfileModal from '../components/ProfileModal';
 import AIChatWidget from '../components/AIChatWidget';
 
+interface FadeInSectionProps {
+  children: React.ReactNode;
+}
 
-function FadeInSection({ children }) {
-  const [isVisible, setVisible] = useState(false);
-  const domRef = useRef(null);
+function FadeInSection({ children }: FadeInSectionProps) {
+  const [isVisible, setVisible] = useState<boolean>(false);
+  const domRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -49,10 +51,14 @@ function FadeInSection({ children }) {
   );
 }
 
-function AnimatedNumber({ value }) {
-  const [current, setCurrent] = useState(0);
-  const domRef = useRef(null);
-  const [hasStarted, setHasStarted] = useState(false);
+interface AnimatedNumberProps {
+  value: number;
+}
+
+function AnimatedNumber({ value }: AnimatedNumberProps) {
+  const [current, setCurrent] = useState<number>(0);
+  const domRef = useRef<HTMLSpanElement | null>(null);
+  const [hasStarted, setHasStarted] = useState<boolean>(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -83,10 +89,10 @@ function AnimatedNumber({ value }) {
   useEffect(() => {
     if (!hasStarted) return;
 
-    let startTime = null;
+    let startTime: number | null = null;
     const duration = 2000; // 2 seconds
 
-    const animate = (timestamp) => {
+    const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       
@@ -105,7 +111,14 @@ function AnimatedNumber({ value }) {
   return <span ref={domRef}>{current}</span>;
 }
 
-const row1Testimonials = [
+interface Testimonial {
+  name: string;
+  university: string;
+  image: string;
+  quote: string;
+}
+
+const row1Testimonials: Testimonial[] = [
   {
     name: "Frederick Octovian",
     university: "Universitas Tadulako",
@@ -132,7 +145,7 @@ const row1Testimonials = [
   }
 ];
 
-const row2Testimonials = [
+const row2Testimonials: Testimonial[] = [
   {
     name: "Htet Wai Yan",
     university: "Yangon University",
@@ -160,11 +173,11 @@ const row2Testimonials = [
 ];
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userName, setUserName] = useState("");
-  const [userId, setUserId] = useState(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [userId, setUserId] = useState<number | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -201,7 +214,6 @@ export default function Home() {
     setUserId(null);
     setUserName("");
   };
-
 
   return (
     <div className="min-h-screen bg-white">
@@ -617,4 +629,3 @@ export default function Home() {
     </div>
   );
 }
-

@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import ProfileModal from "../../components/ProfileModal";
+import ProfileModal from "@/components/ProfileModal";
+
+interface IconProps {
+  className?: string;
+}
 
 // ----------------------------------------------------
 // Icons
 // ----------------------------------------------------
-function SearchIcon({ className = "w-5 h-5" }) {
+function SearchIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -16,7 +20,7 @@ function SearchIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function ConsultIcon({ className = "w-5 h-5" }) {
+function ConsultIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -24,7 +28,7 @@ function ConsultIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function CompareIcon({ className = "w-5 h-5" }) {
+function CompareIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -32,7 +36,7 @@ function CompareIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function PhoneIcon({ className = "w-5 h-5" }) {
+function PhoneIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -40,7 +44,7 @@ function PhoneIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function CameraIcon({ className = "w-5 h-5" }) {
+function CameraIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -48,7 +52,7 @@ function CameraIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function MicIcon({ className = "w-5 h-5" }) {
+function MicIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -56,7 +60,7 @@ function MicIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function ArrowLeftIcon({ className = "w-6 h-6" }) {
+function ArrowLeftIcon({ className = "w-6 h-6" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -64,7 +68,7 @@ function ArrowLeftIcon({ className = "w-6 h-6" }) {
   );
 }
 
-function SendIcon({ className = "w-5 h-5" }) {
+function SendIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -72,7 +76,7 @@ function SendIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function MicOffIcon({ className = "w-5 h-5" }) {
+function MicOffIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z M3 3l18 18" />
@@ -80,7 +84,7 @@ function MicOffIcon({ className = "w-5 h-5" }) {
   );
 }
 
-function CameraOffIcon({ className = "w-5 h-5" }) {
+function CameraOffIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z M3 3l18 18" />
@@ -89,7 +93,7 @@ function CameraOffIcon({ className = "w-5 h-5" }) {
 }
 
 // Helper for dynamic avatars without images
-const getInitials = (name) => {
+const getInitials = (name: string) => {
   if (!name) return "?";
   return name
     .split(" ")
@@ -100,7 +104,7 @@ const getInitials = (name) => {
     .slice(0, 2);
 };
 
-const getAvatarBg = (name) => {
+const getAvatarBg = (name: string) => {
   const colors = [
     "bg-[#ccc1f0] text-[#4c3b9b]",
     "bg-[#b4e5bc] text-[#1e5c27]",
@@ -117,18 +121,53 @@ const getAvatarBg = (name) => {
   return colors[index];
 };
 
+interface Consultant {
+  id: number;
+  name: string;
+  expertise: string;
+  rating: number;
+  email: string;
+}
+
+interface Conversation {
+  userId: number;
+  userName: string;
+  userEmail: string;
+  message: string;
+  sender: string;
+  timestamp: string;
+}
+
+interface ChatMessage {
+  id: number;
+  userId: number;
+  consultantId: number;
+  message: string;
+  sender: string;
+  timestamp: string;
+}
+
+interface IncomingCall {
+  id: string;
+  callerEmail: string;
+  receiverEmail: string;
+  callType: 'voice' | 'video';
+  sdpOffer: RTCSessionDescriptionInit;
+  status: string;
+}
+
 // ----------------------------------------------------
 // Main Component
 // ----------------------------------------------------
 export default function ConsultPage() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userId, setUserId] = useState(null);
-  const [userName, setUserName] = useState("");
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [userId, setUserId] = useState<number | null>(null);
+  const [userName, setUserName] = useState<string>("");
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(3);
 
   // Load user session
   useEffect(() => {
@@ -167,6 +206,7 @@ export default function ConsultPage() {
         router.push("/login");
       }
     }
+    return undefined;
   }, [showLoginModal, countdown, router]);
 
   const handleLogout = () => {
@@ -183,41 +223,40 @@ export default function ConsultPage() {
   const isConsultant = isLoggedIn && userEmail && userEmail.endsWith("@interlect.com");
 
   // Students View States
-  const [view, setView] = useState("dashboard"); // dashboard, chat
-  const [consultantList, setConsultantList] = useState([]);
-  const [selectedPro, setSelectedPro] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [view, setView] = useState<string>("dashboard"); // dashboard, chat
+  const [consultantList, setConsultantList] = useState<Consultant[]>([]);
+  const [selectedPro, setSelectedPro] = useState<Consultant | null>(null);
 
   // Consultants Dashboard States
-  const [conversations, setConversations] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<Conversation | null>(null);
 
   // Shared Chat/Call States
-  const [chatMessages, setChatMessages] = useState([]);
-  const [inputText, setInputText] = useState("");
-  const [callState, setCallState] = useState(null); // null, voice, video
-  const [callTimer, setCallTimer] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOff, setIsCameraOff] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [inputText, setInputText] = useState<string>("");
+  const [callState, setCallState] = useState<'voice' | 'video' | null>(null);
+  const [callTimer, setCallTimer] = useState<number>(0);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [isCameraOff, setIsCameraOff] = useState<boolean>(false);
 
-  const chatEndRef = useRef(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   // WebRTC Call References and States
-  const peerConnectionRef = useRef(null);
-  const localStreamRef = useRef(null);
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   
-  const currentCallIdRef = useRef(null);
-  const peerEmailRef = useRef(null);
-  const isCallerRef = useRef(false);
-  const addedCandidatesRef = useRef(new Set());
+  const currentCallIdRef = useRef<string | null>(null);
+  const peerEmailRef = useRef<string | null>(null);
+  const isCallerRef = useRef<boolean>(false);
+  const addedCandidatesRef = useRef<Set<string>>(new Set());
 
-  const [incomingCall, setIncomingCall] = useState(null);
+  const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
 
   // Timer effect for active call
   useEffect(() => {
-    let interval;
+    let interval: NodeJS.Timeout;
     if (callState) {
       interval = setInterval(() => {
         setCallTimer((prev) => prev + 1);
@@ -294,7 +333,7 @@ export default function ConsultPage() {
   };
 
   // Peer connection initializer
-  const initPeerConnection = async (type) => {
+  const initPeerConnection = async (type: 'voice' | 'video') => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
@@ -351,7 +390,7 @@ export default function ConsultPage() {
   };
 
   // Student initiates a call
-  const handleStartCall = async (type) => {
+  const handleStartCall = async (type: 'voice' | 'video') => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
@@ -391,7 +430,7 @@ export default function ConsultPage() {
   };
 
   // Consultant initiates a call from Student chat lists
-  const handleStartCallConsultant = async (type) => {
+  const handleStartCallConsultant = async (type: 'voice' | 'video') => {
     if (!isLoggedIn || !selectedStudent) return;
 
     peerEmailRef.current = selectedStudent.userEmail;
@@ -400,7 +439,13 @@ export default function ConsultPage() {
     addedCandidatesRef.current.clear();
 
     // Mock selectedPro for layouts
-    setSelectedPro({ name: selectedStudent.userName, email: selectedStudent.userEmail });
+    setSelectedPro({ 
+      id: selectedStudent.userId, 
+      name: selectedStudent.userName, 
+      email: selectedStudent.userEmail, 
+      expertise: "Student Inquiry", 
+      rating: 5.0 
+    });
 
     const pc = await initPeerConnection(type);
 
@@ -441,8 +486,11 @@ export default function ConsultPage() {
 
     // Mock selectedPro for layouts
     setSelectedPro({
+      id: 0,
       name: incomingCall.callerEmail.split("@")[0],
       email: incomingCall.callerEmail,
+      expertise: "Admissions Consultation",
+      rating: 5.0
     });
 
     const pc = await initPeerConnection(incomingCall.callType);
@@ -524,7 +572,7 @@ export default function ConsultPage() {
           }
 
           const pc = peerConnectionRef.current;
-          if (!pc || pc.signalingState === "closed") return;
+          if (!pc || (pc.signalingState as string) === "closed") return;
 
           // If caller, set remote description once SDP answer is received
           if (isCallerRef.current && call && call.sdpAnswer && !pc.remoteDescription) {
@@ -593,6 +641,7 @@ export default function ConsultPage() {
       const interval = setInterval(loadMessages, 3000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isLoggedIn, isConsultant, selectedPro, view, userId]);
 
   // Consultant View: Poll active conversations list
@@ -613,6 +662,7 @@ export default function ConsultPage() {
       const interval = setInterval(loadConversations, 4000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isLoggedIn, isConsultant, userEmail]);
 
   // Consultant View: Poll active student chat history
@@ -633,10 +683,11 @@ export default function ConsultPage() {
       const interval = setInterval(loadMessages, 3000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isLoggedIn, isConsultant, selectedStudent, userEmail]);
 
   // Message sending handlers
-  const handleStudentSendMessage = (e) => {
+  const handleStudentSendMessage = (e: FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim() || !selectedPro || !userId) return;
 
@@ -672,7 +723,7 @@ export default function ConsultPage() {
       .catch((err) => console.error("Error sending student message:", err));
   };
 
-  const handleConsultantSendMessage = (e) => {
+  const handleConsultantSendMessage = (e: FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim() || !selectedStudent || !userEmail) return;
 
@@ -708,22 +759,18 @@ export default function ConsultPage() {
       .catch((err) => console.error("Error sending consultant message:", err));
   };
 
-  const formatTimer = (seconds) => {
+  const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleOpenModal = (pro) => {
+  const handleOpenModal = (pro: Consultant) => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
     }
     setSelectedPro(pro);
-    setView("chat");
-  };
-
-  const handleStartChat = () => {
     setView("chat");
   };
 
@@ -1159,7 +1206,7 @@ export default function ConsultPage() {
         <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6 text-white animate-fade-in">
           {callState === "video" ? (
             /* Video Call layout */
-            <div className="absolute inset-0 size-full overflow-hidden flex flex-col justify-between p-8">
+            <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col justify-between p-8">
               <div className="absolute inset-0 bg-[#1e293b] flex items-center justify-center">
                 <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover z-0" />
                 <div className="text-[10rem] font-bold text-slate-800 opacity-60 z-0">
@@ -1245,7 +1292,7 @@ export default function ConsultPage() {
                 <button
                   onClick={toggleMute}
                   className={`p-4 transition-all rounded-full active:scale-95 cursor-pointer ${
-                    isMuted ? "bg-red-600 hover:bg-red-700" : "bg-slate-700 hover:bg-slate-600"
+                    isMuted ? "bg-red-600 hover:bg-red-700" : "bg-slate-700 hover:bg-slate-650"
                   }`}
                   title={isMuted ? "Unmute" : "Mute"}
                 >
@@ -1302,16 +1349,7 @@ export default function ConsultPage() {
         </div>
       )}
 
-      {/* CSS Animations Injector */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.98); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
+
 
       {/* Login Required Modal */}
       {showLoginModal && (
