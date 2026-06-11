@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
-import db from '../../../../lib/db';
+import db from '@/lib/db';
 
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const namesQuery = searchParams.get('names');
     const listOnly = searchParams.get('list') === 'true';
 
     if (listOnly) {
-      const [rows] = await db.query("SELECT name FROM University ORDER BY name ASC");
-      return NextResponse.json({ universities: rows.map(r => r.name) });
+      const [rows]: any = await db.query("SELECT name FROM University ORDER BY name ASC");
+      return NextResponse.json({ universities: rows.map((r: any) => r.name) });
     }
 
-    let universityNames = [];
+    let universityNames: string[] = [];
     if (namesQuery) {
       universityNames = namesQuery
         .split(',')
@@ -27,7 +27,7 @@ export async function GET(request) {
     const results = [];
     for (const name of universityNames) {
       // Direct database lookup using fuzzy search
-      const [rows] = await db.query(
+      const [rows]: any = await db.query(
         "SELECT * FROM University WHERE name LIKE ?",
         [`%${name}%`]
       );

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import db from "../../../lib/db";
+import db from "@/lib/db";
 
-export async function GET(request) {
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email");
 
@@ -10,7 +10,7 @@ export async function GET(request) {
   }
 
   try {
-    const [rows] = await db.query(
+    const [rows]: any = await db.query(
       "SELECT user_id as userId, name, email FROM user WHERE email = ?",
       [email]
     );
@@ -18,7 +18,7 @@ export async function GET(request) {
     if (rows.length > 0) {
       const userData = rows[0];
       if (email.endsWith("@interlect.com")) {
-        const [consultantRows] = await db.query(
+        const [consultantRows]: any = await db.query(
           "SELECT expertise FROM Consultant WHERE email = ?",
           [email]
         );

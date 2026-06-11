@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { chatWithAI } from '../../../lib/llm';
+import { chatWithAI } from '@/lib/llm';
 
 // Helper to filter potential prompt hijacking, jailbreaking, or coding abuses
-function detectPromptAbuse(text) {
+function detectPromptAbuse(text: string): boolean {
   const query = text.toLowerCase().trim();
 
   // 1. Coding/programming requests
@@ -33,7 +33,7 @@ function detectPromptAbuse(text) {
   return false;
 }
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const { messages } = await request.json();
     

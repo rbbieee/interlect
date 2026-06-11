@@ -1,12 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AIChatWidget({ isLoggedIn }) {
+interface AIChatWidgetProps {
+  isLoggedIn: boolean;
+}
+
+interface MessageItem {
+  id: string | number;
+  role: string;
+  content: string;
+  time: string;
+}
+
+export default function AIChatWidget({ isLoggedIn }: AIChatWidgetProps) {
   const router = useRouter();
-  const [showChat, setShowChat] = useState(false);
-  const [chatHistory, setChatHistory] = useState([
+  const [showChat, setShowChat] = useState<boolean>(false);
+  const [chatHistory, setChatHistory] = useState<MessageItem[]>([
     {
       id: "greet",
       role: "assistant",
@@ -14,12 +25,12 @@ export default function AIChatWidget({ isLoggedIn }) {
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     }
   ]);
-  const [chatInputText, setChatInputText] = useState("");
-  const [isChatTyping, setIsChatTyping] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [chatInputText, setChatInputText] = useState<string>("");
+  const [isChatTyping, setIsChatTyping] = useState<boolean>(false);
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(3);
 
-  const chatEndRef = useRef(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -36,9 +47,10 @@ export default function AIChatWidget({ isLoggedIn }) {
         router.push("/login");
       }
     }
+    return undefined;
   }, [showLoginModal, countdown, router]);
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e?: FormEvent) => {
     if (e) e.preventDefault();
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -49,7 +61,7 @@ export default function AIChatWidget({ isLoggedIn }) {
     const userText = chatInputText;
     setChatInputText("");
     
-    const userMsg = {
+    const userMsg: MessageItem = {
       id: Date.now(),
       role: "user",
       content: userText,

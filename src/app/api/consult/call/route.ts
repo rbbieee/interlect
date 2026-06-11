@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import db from "../../../../lib/db";
+import db from "@/lib/db";
 
 // POST handler for call state signaling and mutation
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { action, callerEmail, receiverEmail, callType, sdpOffer, sdpAnswer, callId, role, candidate } = body;
@@ -23,7 +23,7 @@ export async function POST(request) {
       );
 
       // Insert new call session
-      const [result] = await db.query(
+      const [result]: any = await db.query(
         "INSERT INTO VideoCallSession (caller_email, receiver_email, call_type, sdp_offer, status) VALUES (?, ?, ?, ?, 'ringing')",
         [callerEmail, receiverEmail, callType, JSON.stringify(sdpOffer)]
       );
@@ -54,7 +54,7 @@ export async function POST(request) {
       }
 
       // Fetch the call
-      const [rows] = await db.query("SELECT caller_ice, receiver_ice FROM VideoCallSession WHERE id = ?", [callId]);
+      const [rows]: any = await db.query("SELECT caller_ice, receiver_ice FROM VideoCallSession WHERE id = ?", [callId]);
       if (rows.length === 0) {
         return NextResponse.json({ success: false, message: "Call session not found" }, { status: 404 });
       }
@@ -93,14 +93,14 @@ export async function POST(request) {
     }
 
     return NextResponse.json({ success: false, message: "Invalid action" }, { status: 400 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Signaling POST Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 // GET handler to retrieve call session details (polling)
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get("email");
@@ -111,7 +111,7 @@ export async function GET(request) {
     }
 
     let query = "";
-    let params = [];
+    let params: string[] = [];
 
     if (peer) {
       // Fetch latest call between the two users that is NOT ended
@@ -135,7 +135,7 @@ export async function GET(request) {
       params = [email];
     }
 
-    const [rows] = await db.query(query, params);
+    const [rows]: any = await db.query(query, params);
 
     if (rows.length === 0) {
       return NextResponse.json({ success: true, call: null });
@@ -158,7 +158,7 @@ export async function GET(request) {
     };
 
     return NextResponse.json({ success: true, call });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Signaling GET Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

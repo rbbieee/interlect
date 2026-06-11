@@ -1,15 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 
-export default function ProfileModal({ isOpen, onClose, userId, initialName, initialEmail, onUpdateSuccess }) {
-  const [name, setName] = useState(initialName || "");
-  const [email, setEmail] = useState(initialEmail || "");
-  const [password, setPassword] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [expertise, setExpertise] = useState("");
-  const [error, setError] = useState(null);
-  const [showErrorModal, setShowErrorModal] = useState(false);
+interface ProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userId: number | null;
+  initialName: string;
+  initialEmail: string;
+  onUpdateSuccess: (name: string, email: string) => void;
+}
+
+export default function ProfileModal({ 
+  isOpen, 
+  onClose, 
+  userId, 
+  initialName, 
+  initialEmail, 
+  onUpdateSuccess 
+}: ProfileModalProps) {
+  const [name, setName] = useState<string>(initialName || "");
+  const [email, setEmail] = useState<string>(initialEmail || "");
+  const [password, setPassword] = useState<string>("");
+  const [currentPassword, setCurrentPassword] = useState<string>("");
+  const [expertise, setExpertise] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
 
   const isConsultant = initialEmail && initialEmail.endsWith("@interlect.com");
 
@@ -35,7 +51,7 @@ export default function ProfileModal({ isOpen, onClose, userId, initialName, ini
 
   if (!isOpen) return null;
 
-  const handleSave = async (e) => {
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 

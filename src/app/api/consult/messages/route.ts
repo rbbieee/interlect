@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import db from "../../../../lib/db";
+import db from "@/lib/db";
 
 // GET /api/consult/messages?userId=X&consultantId=Y
 // OR GET /api/consult/messages?userId=X&consultantEmail=E
-export async function GET(request) {
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
   let consultantId = searchParams.get("consultantId");
@@ -16,7 +16,7 @@ export async function GET(request) {
   try {
     // If consultantEmail is provided, find the consultantId first
     if (!consultantId && consultantEmail) {
-      const [consultantRows] = await db.query(
+      const [consultantRows]: any = await db.query(
         "SELECT consultant_id FROM Consultant WHERE email = ?",
         [consultantEmail]
       );
@@ -32,7 +32,7 @@ export async function GET(request) {
     }
 
     // Query messages
-    const [messages] = await db.query(
+    const [messages]: any = await db.query(
       "SELECT chat_id as id, user_id as userId, consultant_id as consultantId, message, timestamp, sender FROM ChatHistory WHERE user_id = ? AND consultant_id = ? ORDER BY timestamp ASC",
       [userId, consultantId]
     );
@@ -46,7 +46,7 @@ export async function GET(request) {
 
 // POST /api/consult/messages
 // Body: { userId, consultantId, consultantEmail, message, sender }
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { userId, message, sender } = body;
@@ -58,7 +58,7 @@ export async function POST(request) {
     }
 
     if (!consultantId && consultantEmail) {
-      const [consultantRows] = await db.query(
+      const [consultantRows]: any = await db.query(
         "SELECT consultant_id FROM Consultant WHERE email = ?",
         [consultantEmail]
       );
@@ -74,7 +74,7 @@ export async function POST(request) {
     }
 
     // Insert message
-    const [result] = await db.query(
+    const [result]: any = await db.query(
       "INSERT INTO ChatHistory (user_id, consultant_id, message, timestamp, sender) VALUES (?, ?, ?, NOW(), ?)",
       [userId, consultantId, message, sender]
     );

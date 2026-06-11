@@ -3,13 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import ProfileModal from "../../components/ProfileModal";
-import AIChatWidget from "../../components/AIChatWidget";
+import ProfileModal from "@/components/ProfileModal";
+import AIChatWidget from "@/components/AIChatWidget";
+
+interface IconProps {
+  className?: string;
+}
 
 // ----------------------------------------------------
 // Icons (SVG Components)
 // ----------------------------------------------------
-function SearchIcon({ className = "w-[18px] h-[18px]" }) {
+function SearchIcon({ className = "w-[18px] h-[18px]" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -17,7 +21,7 @@ function SearchIcon({ className = "w-[18px] h-[18px]" }) {
   );
 }
 
-function ConsultIcon({ className = "w-[18px] h-[18px]" }) {
+function ConsultIcon({ className = "w-[18px] h-[18px]" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -25,7 +29,7 @@ function ConsultIcon({ className = "w-[18px] h-[18px]" }) {
   );
 }
 
-function CompareIcon({ className = "w-[18px] h-[18px]" }) {
+function CompareIcon({ className = "w-[18px] h-[18px]" }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -85,13 +89,13 @@ function WomanStudentIcon() {
 function MedalIcon() {
   return (
     <svg className="w-[20px] h-[20px] text-[#0066FF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
     </svg>
   );
 }
 
 // Helper to resolve local logos
-function getLocalLogo(universityName) {
+function getLocalLogo(universityName: string): string | null {
   const norm = universityName.toLowerCase().trim();
   if (norm.includes("harvard")) return "/harvard.png";
   if (norm.includes("yale")) return "/yale.png";
@@ -104,8 +108,31 @@ function getLocalLogo(universityName) {
   return null;
 }
 
+interface UniversityData {
+  name: string;
+  country: string;
+  type: string;
+  established: string;
+  size: string;
+  students: string;
+  internationalStudents: string;
+  rank: string;
+  majors: string;
+  researchOpportunities: string;
+  system: string;
+  graduationRate: string;
+  acceptanceRate: string;
+  avgGpa: string;
+  recommendationLetters: string;
+  personalEssay: string;
+  applicationFee: string;
+  image?: string;
+  logo?: string;
+  notFound?: boolean;
+}
+
 // Helper to decide which logo URL to display for the university icon
-function getDisplayLogo(uni) {
+function getDisplayLogo(uni: UniversityData) {
   if (!uni) return "/img/Logo.png";
   const isImageLogo = uni.image && (
     uni.image.toLowerCase().includes("logo") ||
@@ -126,11 +153,16 @@ function getDisplayLogo(uni) {
   return uni.logo || "/img/Logo.png";
 }
 
+interface CampusImageProps {
+  src?: string;
+  name: string;
+}
+
 // Dedicated component to render campus photo with logo or spinner loading placeholders
-function CampusImage({ src, name }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [isSmallLogo, setIsSmallLogo] = useState(false);
+function CampusImage({ src, name }: CampusImageProps) {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<boolean>(false);
+  const [isSmallLogo, setIsSmallLogo] = useState<boolean>(false);
 
   const localLogo = getLocalLogo(name);
 
@@ -152,7 +184,7 @@ function CampusImage({ src, name }) {
     <div className="w-full h-full relative flex items-center justify-center bg-slate-50">
       {/* Loading State Placeholder */}
       {loading && (
-        <div className="absolute inset-0 size-full flex flex-col items-center justify-center bg-slate-50 z-10 p-6 animate-pulse">
+        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-50 z-10 p-6 animate-pulse">
           {localLogo ? (
             <div className="flex flex-col items-center gap-3">
               <img
@@ -176,7 +208,7 @@ function CampusImage({ src, name }) {
 
       {/* Error / Fallback State */}
       {error ? (
-        <div className="absolute inset-0 size-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
           {localLogo ? (
             <img
               src={localLogo}
@@ -203,7 +235,7 @@ function CampusImage({ src, name }) {
             }`}
           onLoad={(e) => {
             setLoading(false);
-            const img = e.target;
+            const img = e.currentTarget as HTMLImageElement;
             if (img.naturalWidth > 0 && img.naturalHeight > 0) {
               const isSquare = Math.abs(img.naturalWidth / img.naturalHeight - 1) < 0.15;
               const isSmall = img.naturalWidth < 450 && img.naturalHeight < 450;
@@ -246,13 +278,13 @@ const PRESETS = [
 
 export default function ComparePage() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userName, setUserName] = useState("");
-  const [userId, setUserId] = useState(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [userId, setUserId] = useState<number | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(3);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -290,12 +322,12 @@ export default function ComparePage() {
     setUserName("");
   };
 
-  const [unis, setUnis] = useState(["Harvard University", "Princeton University", "Yale University"]);
-  const [data, setData] = useState([]);
-  const [dbUniversities, setDbUniversities] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [compareMode, setCompareMode] = useState("ai");
+  const [unis, setUnis] = useState<string[]>(["Harvard University", "Princeton University", "Yale University"]);
+  const [data, setData] = useState<UniversityData[]>([]);
+  const [dbUniversities, setDbUniversities] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState<string>("ai");
 
   useEffect(() => {
     fetch("/api/compare/db?list=true")
@@ -309,7 +341,7 @@ export default function ComparePage() {
   }, []);
 
   // Fetch helper
-  const fetchComparison = async (namesArray, currentMode = compareMode) => {
+  const fetchComparison = async (namesArray: string[], currentMode = compareMode) => {
     setLoading(true);
     setError(null);
     try {
@@ -355,6 +387,7 @@ export default function ComparePage() {
         router.push("/login");
       }
     }
+    return undefined;
   }, [showLoginModal, countdown, router]);
 
   const handleCompare = () => {
@@ -371,7 +404,7 @@ export default function ComparePage() {
     fetchComparison(activeNames, compareMode);
   };
 
-  const handlePreset = (presetUnis) => {
+  const handlePreset = (presetUnis: string[]) => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
@@ -380,7 +413,7 @@ export default function ComparePage() {
     fetchComparison(presetUnis, compareMode);
   };
 
-  const handleInputChange = (idx, value) => {
+  const handleInputChange = (idx: number, value: string) => {
     const nextUnis = [...unis];
     nextUnis[idx] = value;
     setUnis(nextUnis);
@@ -657,7 +690,7 @@ export default function ComparePage() {
                         alt={`${uni.name} Logo`}
                         className="max-h-full max-w-full object-contain"
                         onError={(e) => {
-                          e.target.src = "/img/Logo.png";
+                          (e.currentTarget as HTMLImageElement).src = "/img/Logo.png";
                         }}
                       />
                     </div>

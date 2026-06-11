@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { compareUniversities } from '../../../lib/llm';
+import { compareUniversities, University } from '@/lib/llm';
 
 // Descriptive User-Agent header strictly required by Wikimedia APIs to prevent 403 blocks
 const WIKIPEDIA_HEADERS = {
@@ -7,7 +7,7 @@ const WIKIPEDIA_HEADERS = {
 };
 
 // Helper to fetch high-resolution campus images from Wikipedia
-async function fetchWikimediaImage(universityName) {
+async function fetchWikimediaImage(universityName: string): Promise<string | null> {
   try {
     // 1. Search Wikipedia for the best matching page title
     const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=${encodeURIComponent(universityName + " campus")}&srlimit=1`;
@@ -48,7 +48,7 @@ async function fetchWikimediaImage(universityName) {
 }
 
 // Helper to fetch university logo from Wikipedia
-async function fetchWikimediaLogo(universityName) {
+async function fetchWikimediaLogo(universityName: string): Promise<string | null> {
   try {
     // 1. Search Wikipedia for logo
     const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=${encodeURIComponent(universityName + " logo")}&srlimit=1`;
@@ -88,7 +88,7 @@ async function fetchWikimediaLogo(universityName) {
 }
 
 // Helper to get local fallback logo if it exists
-function getLocalLogo(universityName) {
+function getLocalLogo(universityName: string): string | null {
   const norm = universityName.toLowerCase().trim();
   if (norm.includes("harvard")) return "/harvard.png";
   if (norm.includes("yale")) return "/yale.png";
@@ -101,13 +101,13 @@ function getLocalLogo(universityName) {
   return null;
 }
 
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const namesQuery = searchParams.get('names');
     
     // Parse names, defaulting to Harvard, Yale, Princeton if empty or omitted
-    let universityNames = [];
+    let universityNames: string[] = [];
     if (namesQuery) {
       universityNames = namesQuery
           .split(',')
@@ -124,8 +124,8 @@ export async function GET(request) {
     
     // Fetch Wikipedia images and logos in parallel for each resolved university name
     const updatedUniversities = await Promise.all(
-      comparisonResult.universities.map(async (uni) => {
-        const nameKey = uni.name || uni.requestedName;
+      comparisonResult.universities.map(async (uni: University) => {
+        const nameKey = uni.name || "";
         const localLogo = getLocalLogo(nameKey);
         
         const [image, logo] = await Promise.all([

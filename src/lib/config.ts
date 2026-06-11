@@ -1,5 +1,21 @@
+export interface ProviderConfig {
+  apiKey: string;
+  model: string;
+  apiUrl: string;
+}
+
+export interface Config {
+  provider: string;
+  gemini: ProviderConfig;
+  openai: ProviderConfig;
+  claude: ProviderConfig;
+  deepseek: ProviderConfig;
+  openrouter: ProviderConfig;
+  [key: string]: any; // to allow dynamic lookup by provider key
+}
+
 // Configuration loader for LLM providers and API keys
-const config = {
+const config: Config = {
   provider: process.env.LLM_PROVIDER || 'gemini', // 'gemini', 'openai', 'claude', 'deepseek', 'openrouter'
   
   // Provider API keys

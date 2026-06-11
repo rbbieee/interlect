@@ -1,6 +1,34 @@
 import config from './config';
 
-const mockData = {
+export interface University {
+  name: string;
+  established: string;
+  rank: string;
+  country: string;
+  type: string;
+  size: string;
+  students: string;
+  internationalStudents: string;
+  majors: string;
+  researchOpportunities: string;
+  system: string;
+  graduationRate: string;
+  acceptanceRate: string;
+  avgGpa: string;
+  recommendationLetters: string;
+  personalEssay: string;
+  applicationFee: string;
+  image?: string;
+  logo?: string;
+  notFound?: boolean;
+}
+
+export interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+const mockData: Record<string, University> = {
   "harvard university": {
     name: "Harvard University",
     established: "1636",
@@ -60,7 +88,7 @@ const mockData = {
   }
 };
 
-function findMockUniversity(name) {
+function findMockUniversity(name: string): University | null {
   const norm = name.toLowerCase().trim();
   if (norm.includes("harvard")) return mockData["harvard university"];
   if (norm.includes("yale")) return mockData["yale university"];
@@ -68,7 +96,7 @@ function findMockUniversity(name) {
   return null;
 }
 
-function generateGenericMock(name) {
+function generateGenericMock(name: string): University {
   const formattedName = name
     .trim()
     .split(/\s+/)
@@ -96,13 +124,13 @@ function generateGenericMock(name) {
   };
 }
 
-export async function compareUniversities(universityNames) {
+export async function compareUniversities(universityNames: string[]): Promise<{ universities: University[] }> {
   if (!Array.isArray(universityNames) || universityNames.length === 0) {
     return { universities: [] };
   }
 
   // 1. Check if we can fulfill all of them using local mock data (for quick response & no-key support)
-  const results = [];
+  const results: University[] = [];
   let allMockFound = true;
   
   for (const name of universityNames) {
@@ -302,7 +330,7 @@ Return ONLY the raw JSON object. Do not include markdown formatting blocks unles
 
 const CHAT_SYSTEM_INSTRUCTION = `You are the Interlect Education Consultant AI. Your only purpose is to help students find universities, scholarships, admission requirements, and academic counseling. Politely refuse to write code, solve programming tasks, perform creative writing on unrelated topics, or answer unrelated general knowledge questions. If the user asks about unrelated topics, reply: "I am only programmed to assist with university, scholarship, and educational counseling inquiries." Keep responses helpful, professional, and concise.`;
 
-export async function chatWithAI(messages) {
+export async function chatWithAI(messages: ChatMessage[]): Promise<string> {
   if (!Array.isArray(messages) || messages.length === 0) {
     return "Hello! How can I help you find your dream university today?";
   }
@@ -466,4 +494,3 @@ export async function chatWithAI(messages) {
     return "I apologize, but I encountered an error. Please check your network connection or try again later.";
   }
 }
-
