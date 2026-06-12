@@ -604,8 +604,8 @@ export default function ConsultPage() {
             await pc.setRemoteDescription(new RTCSessionDescription(call.sdpAnswer));
           }
 
-          // Apply peer's ICE candidates
-          if (call) {
+          // Apply peer's ICE candidates only after remote description is set
+          if (call && pc.remoteDescription) {
             const remoteCandidates = isCallerRef.current ? call.receiverIce : call.callerIce;
             if (Array.isArray(remoteCandidates)) {
               for (const candidate of remoteCandidates) {
