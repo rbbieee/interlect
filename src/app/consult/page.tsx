@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ProfileModal from "@/components/ProfileModal";
+import UserMenu from "@/components/UserMenu";
+import PaymentModal from "@/components/PaymentModal";
+import ConsultantReviewModal from "@/components/ConsultantReviewModal";
 
 interface IconProps {
   className?: string;
@@ -167,6 +170,7 @@ export default function ConsultPage() {
   const [userName, setUserName] = useState<string>("");
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(3);
 
   // Load user session
@@ -192,6 +196,20 @@ export default function ConsultPage() {
           .catch((err) => console.error("Error fetching user info:", err));
       } else {
         setShowLoginModal(true);
+      }
+    }
+  }, []);
+
+  // Parse preferred university choices from URL
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const first = params.get("first");
+      const second = params.get("second");
+      if (first && second) {
+        setInputText(
+          `Hello! I would like to consult about applying to my preferred options: 1st Option - ${first}, 2nd Option - ${second}.`
+        );
       }
     }
   }, []);
@@ -226,6 +244,8 @@ export default function ConsultPage() {
   const [view, setView] = useState<string>("dashboard"); // dashboard, chat
   const [consultantList, setConsultantList] = useState<Consultant[]>([]);
   const [selectedPro, setSelectedPro] = useState<Consultant | null>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
 
   // Consultants Dashboard States
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -364,6 +384,10 @@ export default function ConsultPage() {
 
     // Get media devices stream
     try {
+      if (typeof window !== "undefined" && (!navigator || !navigator.mediaDevices)) {
+        alert("Camera and Microphone access requires a secure context (HTTPS) or localhost. Since you are accessing the website over a local network IP, please start the server with HTTPS or allow insecure origins in your browser settings.");
+        return pc;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: type === "video",
         audio: true,
@@ -382,8 +406,9 @@ export default function ConsultPage() {
           pc.addTrack(track, stream);
         }
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error acquiring media devices:", err);
+      alert(`Could not access camera/microphone. Error: ${err.name || err.message || err}.\n\nPlease check if your camera/mic is plugged in, and verify that camera/mic permissions are allowed for this site in your browser settings (check the permissions icon in the address bar).`);
     }
 
     return pc;
@@ -623,6 +648,43 @@ export default function ConsultPage() {
     }
   }, [isLoggedIn, isConsultant]);
 
+  const fetchReviews = (consultantId: number) => {
+    fetch(`/api/consultants/reviews?consultantId=${consultantId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setReviews(data);
+        }
+      })
+      .catch((err) => console.error("Error fetching consultant reviews:", err));
+  };
+
+  useEffect(() => {
+    if (selectedPro) {
+      fetchReviews(selectedPro.id);
+    }
+  }, [selectedPro]);
+
+  const handleReviewSubmitSuccess = () => {
+    if (selectedPro) {
+      fetchReviews(selectedPro.id);
+      
+      // Refresh consultant list to get updated ratings
+      fetch("/api/consultants")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setConsultantList(data);
+            const updatedPro = data.find((c) => c.id === selectedPro.id);
+            if (updatedPro) {
+              setSelectedPro(updatedPro);
+            }
+          }
+        })
+        .catch((err) => console.error("Error refreshing consultants list:", err));
+    }
+  };
+
   // Student View: Poll chat history
   useEffect(() => {
     if (isLoggedIn && !isConsultant && selectedPro && view === "chat" && userId) {
@@ -815,18 +877,13 @@ export default function ConsultPage() {
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setShowProfileModal(true)}
-                  className="flex items-center gap-2.5 px-5 py-2.5 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-full hover:bg-gray-100 hover:text-[#0066FF] hover:border-gray-300 transition-colors cursor-pointer"
-                >
-                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>{userName || userEmail}</span>
-                  <svg className="w-[12px] h-[12px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                <UserMenu
+                  userName={userName}
+                  userEmail={userEmail}
+                  onLogout={handleLogout}
+                  onOpenProfile={() => setShowProfileModal(true)}
+                  onOpenPayments={() => setShowPaymentModal(true)}
+                />
                 <button
                   onClick={handleLogout}
                   className="px-6 py-2.5 text-sm font-bold text-red-600 rounded-full border-[1.5px] border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
@@ -1085,6 +1142,41 @@ export default function ConsultPage() {
                   <p className="text-xs text-gray-400 mt-2 max-w-[200px] leading-relaxed">
                     Specialized in {selectedPro.expertise} and global educational counselling.
                   </p>
+                  <div className="flex items-center gap-1.5 mt-3">
+                    <span className="text-yellow-500 text-lg">★</span>
+                    <span className="text-sm font-bold text-gray-800">{selectedPro.rating.toFixed(1)}</span>
+                  </div>
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="mt-4 px-5 py-2 bg-[#0066FF] hover:bg-blue-700 text-white rounded-full font-bold text-xs transition-colors cursor-pointer shadow-sm active:scale-95 duration-100"
+                  >
+                    Rate & Review
+                  </button>
+                </div>
+
+                {/* Recent Reviews list */}
+                <div className="w-full flex-grow overflow-y-auto mt-6 border-t border-gray-200/60 pt-6 space-y-4">
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                    Reviews ({reviews.length})
+                  </h3>
+                  {reviews.length === 0 ? (
+                    <p className="text-xs text-gray-400 italic">No reviews yet.</p>
+                  ) : (
+                    <div className="space-y-3 pr-1 w-full">
+                      {reviews.slice(0, 3).map((rev) => (
+                        <div key={rev.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100/50 flex flex-col gap-1.5 text-left w-full">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-xs text-gray-800 truncate max-w-[120px]">{rev.reviewerName}</span>
+                            <div className="flex items-center gap-0.5">
+                              <span className="text-yellow-400 text-xs">★</span>
+                              <span className="text-[10px] font-bold text-gray-600">{rev.rating}</span>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-gray-500 leading-normal line-clamp-3">"{rev.comment}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-auto w-full pt-6 border-t border-gray-200/60 hidden md:block">
@@ -1392,6 +1484,21 @@ export default function ConsultPage() {
           localStorage.setItem("userEmail", updatedEmail);
           localStorage.setItem("userName", updatedName);
         }}
+      />
+      {/* Payment History Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        userId={userId}
+      />
+      {/* Consultant Review Modal */}
+      <ConsultantReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        userId={userId}
+        consultantId={selectedPro?.id || null}
+        consultantName={selectedPro?.name || ""}
+        onSubmitSuccess={handleReviewSubmitSuccess}
       />
     </div>
   );

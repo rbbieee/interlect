@@ -104,6 +104,7 @@ export default function LoginPage() {
           <input
             type="email"
             value={email}
+            suppressHydrationWarning={true}
             className="w-full h-12 rounded-xl border border-[#c1cfee] px-4 mb-5 focus:outline-none focus:border-blue-500"
             onChange={(e) => {
               setEmail(e.target.value);
@@ -118,6 +119,7 @@ export default function LoginPage() {
           <input
             type="password"
             value={password}
+            suppressHydrationWarning={true}
             className="w-full h-12 rounded-xl border border-[#c1cfee] px-4 mb-6 focus:outline-none focus:border-blue-500"
             onChange={(e) => {
               setPassword(e.target.value);

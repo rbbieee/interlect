@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import ProfileModal from '../components/ProfileModal';
 import AIChatWidget from '../components/AIChatWidget';
+import UserMenu from '../components/UserMenu';
+import PaymentModal from '../components/PaymentModal';
 
 interface FadeInSectionProps {
   children: React.ReactNode;
@@ -178,6 +180,7 @@ export default function Home() {
   const [userName, setUserName] = useState<string>("");
   const [userId, setUserId] = useState<number | null>(null);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -246,18 +249,13 @@ export default function Home() {
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setShowProfileModal(true)}
-                  className="flex items-center gap-2.5 px-5 py-2.5 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-full hover:bg-gray-100 hover:text-[#0066FF] hover:border-gray-300 transition-colors cursor-pointer"
-                >
-                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>{userName || userEmail}</span>
-                  <svg className="w-[12px] h-[12px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                <UserMenu
+                  userName={userName}
+                  userEmail={userEmail}
+                  onLogout={handleLogout}
+                  onOpenProfile={() => setShowProfileModal(true)}
+                  onOpenPayments={() => setShowPaymentModal(true)}
+                />
                 <button
                   onClick={handleLogout}
                   className="px-6 py-2.5 text-sm font-bold text-red-600 rounded-full border-[1.5px] border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
@@ -625,6 +623,12 @@ export default function Home() {
           localStorage.setItem("userEmail", updatedEmail);
           localStorage.setItem("userName", updatedName);
         }}
+      />
+      {/* Payment History Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        userId={userId}
       />
     </div>
   );

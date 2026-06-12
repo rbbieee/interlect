@@ -68,11 +68,13 @@ CREATE TABLE Review (
     review_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
     university_id INT,
+    consultant_id INT,
     rating INT NOT NULL,
     comment TEXT,
     created_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES User(user_id),
-    FOREIGN KEY (university_id) REFERENCES University(university_id)
+    FOREIGN KEY (university_id) REFERENCES University(university_id),
+    FOREIGN KEY (consultant_id) REFERENCES Consultant(consultant_id) ON DELETE CASCADE
 );
 
 CREATE TABLE ChatHistory (

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ProfileModal from "@/components/ProfileModal";
 import AIChatWidget from "@/components/AIChatWidget";
+import UserMenu from "@/components/UserMenu";
+import PaymentModal from "@/components/PaymentModal";
 
 interface IconProps {
   className?: string;
@@ -283,8 +285,11 @@ export default function ComparePage() {
   const [userName, setUserName] = useState<string>("");
   const [userId, setUserId] = useState<number | null>(null);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(3);
+
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -328,6 +333,25 @@ export default function ComparePage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState<string>("ai");
+
+  const [firstChoice, setFirstChoice] = useState<string>("");
+  const [secondChoice, setSecondChoice] = useState<string>("");
+
+  useEffect(() => {
+    const names = data.map((u) => u.name);
+    if (firstChoice && !names.includes(firstChoice)) {
+      setFirstChoice("");
+    }
+    if (secondChoice && !names.includes(secondChoice)) {
+      setSecondChoice("");
+    }
+  }, [data]);
+
+  const handleApplyRedirect = () => {
+    if (typeof window !== 'undefined') {
+      router.push(`/consult?first=${encodeURIComponent(firstChoice)}&second=${encodeURIComponent(secondChoice)}`);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/compare/db?list=true")
@@ -450,18 +474,13 @@ export default function ComparePage() {
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setShowProfileModal(true)}
-                  className="flex items-center gap-2.5 px-5 py-2.5 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-full hover:bg-gray-100 hover:text-[#0066FF] hover:border-gray-300 transition-colors cursor-pointer"
-                >
-                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>{userName || userEmail}</span>
-                  <svg className="w-[12px] h-[12px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                <UserMenu
+                  userName={userName}
+                  userEmail={userEmail}
+                  onLogout={handleLogout}
+                  onOpenProfile={() => setShowProfileModal(true)}
+                  onOpenPayments={() => setShowPaymentModal(true)}
+                />
                 <button
                   onClick={handleLogout}
                   className="px-6 py-2.5 text-sm font-bold text-red-600 rounded-full border-[1.5px] border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
@@ -904,6 +923,101 @@ export default function ComparePage() {
                 </div>
               </div>
 
+              {/* Preference Selection Section */}
+              {data.length > 0 && (
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 shadow-lg shadow-gray-200/40 w-full flex flex-col items-center">
+                  <div className="bg-[#e2edfc] px-8 py-3.5 rounded-xl text-lg font-bold text-gray-900 mb-6 tracking-wide w-full text-center">
+                    Select Your University Preferences
+                  </div>
+                  
+                  <p className="text-gray-500 text-sm mb-8 max-w-2xl text-center">
+                    Choose your first and second option universities from your comparison list before starting your application.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl mb-8">
+                    {/* First Option Choice */}
+                    <div className="flex flex-col">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2.5">
+                        First Option (Choice #1)
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={firstChoice}
+                          onChange={(e) => {
+                            setFirstChoice(e.target.value);
+                            if (e.target.value === secondChoice) {
+                              setSecondChoice("");
+                            }
+                          }}
+                          className="w-full px-5 py-3 bg-white border border-[#305687]/20 rounded-2xl shadow-sm focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] outline-none text-[15px] font-bold text-gray-800 transition-all appearance-none cursor-pointer pr-10"
+                        >
+                          <option value="">Select first option...</option>
+                          {data.map((uni) => (
+                            <option key={uni.name} value={uni.name}>
+                              {uni.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Second Option Choice */}
+                    <div className="flex flex-col">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2.5">
+                        Second Option (Choice #2)
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={secondChoice}
+                          onChange={(e) => setSecondChoice(e.target.value)}
+                          className="w-full px-5 py-3 bg-white border border-[#305687]/20 rounded-2xl shadow-sm focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] outline-none text-[15px] font-bold text-gray-800 transition-all appearance-none cursor-pointer pr-10"
+                          disabled={!firstChoice}
+                        >
+                          <option value="">Select second option...</option>
+                          {data
+                            .filter((uni) => uni.name !== firstChoice)
+                            .map((uni) => (
+                              <option key={uni.name} value={uni.name}>
+                                {uni.name}
+                              </option>
+                            ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Call-to-action Message and Apply Button */}
+                  {firstChoice && secondChoice && (
+                    <div className="w-full max-w-2xl bg-blue-50/70 border border-blue-100 rounded-3xl p-6 flex flex-col items-center text-center animate-fade-in shadow-inner mt-4">
+                      <span className="text-3xl mb-3">🎉</span>
+                      <h4 className="text-lg font-bold text-blue-900 mb-2">Good choice, apply now.</h4>
+                      <p className="text-sm text-blue-700/85 mb-6 max-w-md font-semibold leading-relaxed">
+                        Your university choices are set. Click the button below to start the application consultation immediately.
+                      </p>
+                      <button
+                        onClick={handleApplyRedirect}
+                        className="bg-[#0066FF] hover:bg-blue-700 text-white font-bold text-sm px-10 py-4 rounded-full transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span>Apply Now</span>
+                        <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
 
           </div>
@@ -957,6 +1071,12 @@ export default function ComparePage() {
           localStorage.setItem("userEmail", updatedEmail);
           localStorage.setItem("userName", updatedName);
         }}
+      />
+      {/* Payment History Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        userId={userId}
       />
       <AIChatWidget isLoggedIn={isLoggedIn} />
     </div>

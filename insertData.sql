@@ -35,8 +35,10 @@ INSERT INTO Preference (user_id, category, weight, value) VALUES
 (2, 'Budget', 0.9, 20000.00);
 
 -- Insert Reviews
-INSERT INTO Review (user_id, university_id, rating, comment, created_at) VALUES
-(1, 1, 5, 'Great campus and excellent CS professors!', '2023-11-01 09:00:00');
+INSERT INTO Review (user_id, university_id, consultant_id, rating, comment, created_at) VALUES
+(1, 1, NULL, 5, 'Great campus and excellent CS professors!', '2023-11-01 09:00:00'),
+(2, NULL, 1, 5, 'Dr. Wowo gave extremely useful and actionable feedback!', '2023-11-02 10:30:00'),
+(1, NULL, 2, 4, 'Very helpful guidance on financial aid opportunities.', '2023-11-03 14:00:00');
 
 -- Insert ChatHistory
 INSERT INTO ChatHistory (user_id, consultant_id, message, timestamp, sender) VALUES
